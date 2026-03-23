@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  body { background: #f8f7f4; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  @keyframes build1 {
+    0%, 4% { transform: scaleY(0); opacity: 0; }
+    14% { transform: scaleY(1); opacity: 1; }
+    80% { transform: scaleY(1); opacity: 1; }
+    90%, 100% { transform: scaleY(0); opacity: 0; }
+  }
+  @keyframes build2 {
+    0%, 20% { transform: scaleY(0); opacity: 0; }
+    30% { transform: scaleY(1); opacity: 1; }
+    80% { transform: scaleY(1); opacity: 1; }
+    90%, 100% { transform: scaleY(0); opacity: 0; }
+  }
+  @keyframes build3 {
+    0%, 36% { transform: scaleY(0); opacity: 0; }
+    46% { transform: scaleY(1); opacity: 1; }
+    80% { transform: scaleY(1); opacity: 1; }
+    90%, 100% { transform: scaleY(0); opacity: 0; }
+  }
+  @keyframes build4 {
+    0%, 52% { transform: scaleY(0); opacity: 0; }
+    62% { transform: scaleY(1); opacity: 1; }
+    80% { transform: scaleY(1); opacity: 1; }
+    90%, 100% { transform: scaleY(0); opacity: 0; }
+  }
+  .bar1 { transform-origin: 5px 60px; animation: build1 5s ease-out infinite; }
+  .bar2 { transform-origin: 19px 60px; animation: build2 5s ease-out infinite; }
+  .bar3 { transform-origin: 33px 60px; animation: build3 5s ease-out infinite; }
+  .bar4 { transform-origin: 47px 60px; animation: build4 5s ease-out infinite; }
+  .tagline { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; fill: #1B1F3B; letter-spacing: 0.5px; text-transform: uppercase; }
+  .brand { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 800; }
+  .name { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600; fill: #1B1F3B; }
+</style>
+</head>
+<body>
+<svg width="420" height="80" viewBox="0 0 420 80" style="overflow: visible;">
+  <rect class="bar1" x="0" y="44" width="10" height="16" rx="3" fill="#EF9F27"/>
+  <rect class="bar2" x="14" y="34" width="10" height="26" rx="3" fill="#D4537E"/>
+  <rect class="bar3" x="28" y="22" width="10" height="38" rx="3" fill="#7F77DD"/>
+  <rect class="bar4" x="42" y="10" width="10" height="50" rx="3" fill="#1D9E75"/>
+  <text x="66" y="20" class="tagline">Pipeline Intelligence</text>
+  <text x="66" y="52" class="brand" fill="#D4537E">deal</text>
+  <text x="122" y="52" class="brand" fill="#7F77DD">insight</text>
+  <text x="66" y="72" font-family="Inter, sans-serif" font-size="11" fill="#999">dealinsight.io</text>
+  <line x1="220" y1="12" x2="220" y2="72" stroke="#1D9E75" stroke-width="2" stroke-linecap="round"/>
+  <text x="245" y="52" class="name">Stacey Shub</text>
+  <text x="245" y="72" font-family="Inter, sans-serif" font-size="11" fill="#999">stacey@dealinsight.io</text>
+</svg>
+</body>
+</html>

@@ -1,0 +1,372 @@
+{
+  "_meta": {
+    "title": "Deal Insight - Technical Specification",
+    "version": "1.0",
+    "date": "2026-03-16",
+    "author": "Stacey Shub",
+    "purpose": "Complete scoring rubric, data model, and architecture spec for V1 build"
+  },
+
+  "signals": {
+    "description": "Six signals that determine deal health. Each is scored 0-100 on two dimensions: coverage (is the information there?) and depth (how strong is the evidence?).",
+    "list": [
+      {
+        "id": "pain",
+        "name": "The Pain",
+        "question": "What problem are we solving and how badly does it hurt?",
+        "scoring": {
+          "0-20": "No pain identified, or generic ('they need better reporting')",
+          "20-40": "Problem described but no specifics on who it affects or how",
+          "40-60": "Problem is specific, affects named people/roles, but no cost attached",
+          "60-80": "Problem is quantified (time lost, errors per month, manual hours). Consequence chain exists.",
+          "80-100": "Dollar impact stated by prospect. Cost of inaction articulated. Multiple people have confirmed the pain independently."
+        },
+        "coverage_checklist": [
+          { "item": "Is a specific problem described?", "points": 20 },
+          { "item": "Is it tied to a business process, not just a feeling?", "points": 15 },
+          { "item": "Who does it affect? Named roles?", "points": 15 },
+          { "item": "What is the consequence if they do not fix it?", "points": 20 },
+          { "item": "Is there a dollar cost or time cost?", "points": 15 },
+          { "item": "Has more than one person confirmed the pain?", "points": 15 }
+        ],
+        "coaching_prompt_example": "You have described a problem but the prospect has not told you what it costs. Try: 'Do you have a rough sense of what this is costing the business annually?'"
+      },
+      {
+        "id": "value",
+        "name": "The Value",
+        "question": "What is the economic or operational impact of solving this?",
+        "scoring": {
+          "0-20": "No desired outcome described",
+          "20-40": "Generic value statement ('they want better visibility')",
+          "40-60": "Desired future state described in prospect's words, but no dollar value",
+          "60-80": "Dollar impact estimated. Solution is linked to specific outcomes.",
+          "80-100": "Prospect has articulated the ROI themselves. Clear differentiator vs alternatives. Value ties to a specific person's success metrics."
+        },
+        "coverage_checklist": [
+          { "item": "Is the desired future state described?", "points": 20 },
+          { "item": "Is it in the prospect's words, not the rep's pitch?", "points": 15 },
+          { "item": "Is there a dollar value or measurable outcome?", "points": 20 },
+          { "item": "Does the value connect to YOUR specific solution (not generic)?", "points": 20 },
+          { "item": "Does a specific stakeholder own this outcome personally?", "points": 15 },
+          { "item": "Would this make someone a hero internally?", "points": 10 }
+        ],
+        "coaching_prompt_example": "You know their pain but have not connected it to a dollar outcome. Try: 'If we solved this completely, what would that free up for your team, and what is that worth?'"
+      },
+      {
+        "id": "people",
+        "name": "The People",
+        "question": "Who makes the decision and who influences it?",
+        "scoring": {
+          "0-20": "One contact only, no understanding of decision structure",
+          "20-40": "2-3 contacts, but roles and influence unclear",
+          "40-60": "Economic Buyer identified. Champion identified. But sentiment/influence not assessed.",
+          "60-80": "Full map: EB, Champion, end users, and at least one potential blocker identified. You know what each person cares about individually.",
+          "80-100": "Champion is tested and confirmed (they have taken action for you). EB has been engaged directly. Blocker strategy exists."
+        },
+        "coverage_checklist": [
+          { "item": "Is there more than one contact?", "points": 10 },
+          { "item": "Is the Economic Buyer identified by name?", "points": 20 },
+          { "item": "Is there a Champion?", "points": 15 },
+          { "item": "Has the Champion done something for you (not just been friendly)?", "points": 15 },
+          { "item": "Are blockers or skeptics identified?", "points": 10 },
+          { "item": "Do you know what each stakeholder individually cares about?", "points": 15 },
+          { "item": "Has the rep engaged at the executive level?", "points": 15 }
+        ],
+        "coaching_prompt_example": "You have one contact and no executive access. Try: 'Who else on your team would want to see this before moving forward?' or 'If you brought this to your VP, what would their first question be?'"
+      },
+      {
+        "id": "process",
+        "name": "The Process",
+        "question": "How will this purchase decision actually happen?",
+        "scoring": {
+          "0-20": "No understanding of how they buy",
+          "20-40": "Vague sense ('I think the VP approves it')",
+          "40-60": "Decision steps known but timeline and procurement details missing",
+          "60-80": "Full process mapped: who approves, in what order, does legal review, what threshold triggers board involvement. Timeline estimated.",
+          "80-100": "Process confirmed by prospect. Historical buying timeline referenced. Legal/procurement contacts identified. Mutual close plan exists with dates."
+        },
+        "coverage_checklist": [
+          { "item": "Are the decision steps documented?", "points": 20 },
+          { "item": "Is the approval chain named (not just 'management')?", "points": 15 },
+          { "item": "Do you know if legal/procurement gets involved?", "points": 15 },
+          { "item": "Do you know the budget threshold for additional approvals?", "points": 15 },
+          { "item": "Is there a realistic timeline based on how they have bought before?", "points": 15 },
+          { "item": "Is there a mutual action plan with dates?", "points": 20 }
+        ],
+        "coaching_prompt_example": "Your close date is next month but you do not know their signing process. Try: 'When you have purchased software like this before, what did the approval process look like, and how long did it take?'"
+      },
+      {
+        "id": "competition",
+        "name": "The Competition",
+        "question": "What alternatives exist and where do we stand?",
+        "scoring": {
+          "0-20": "Blank or 'no competition' (red flag, means you have not asked)",
+          "20-40": "Competitors named but no detail on positioning",
+          "40-60": "Competitors known. You know what the prospect likes about them.",
+          "60-80": "Full picture: other vendors, internal build option, and status quo all assessed. You know your differentiated advantage for THIS deal.",
+          "80-100": "Prospect has told you why they would choose you. Competitive positioning is tailored to their specific criteria. Status quo cost of inaction is articulated."
+        },
+        "coverage_checklist": [
+          { "item": "Are you evaluating other vendors? Named?", "points": 20 },
+          { "item": "Is 'build it ourselves' on the table?", "points": 10 },
+          { "item": "Is the status quo option addressed?", "points": 20 },
+          { "item": "Do you know what they like about the alternatives?", "points": 15 },
+          { "item": "Do you know YOUR specific advantage for THIS deal?", "points": 20 },
+          { "item": "Has the prospect articulated why they would choose you?", "points": 15 }
+        ],
+        "coaching_prompt_example": "Competition is blank. That usually means you have not asked, not that there is none. Try: 'Most companies in your space compare a few options. Where are you in that process?'"
+      },
+      {
+        "id": "momentum",
+        "name": "The Momentum",
+        "question": "Is this deal moving forward or stalling?",
+        "scoring": {
+          "0-20": "No next step. No recent contact. Deal is dark.",
+          "20-40": "Vague next step ('we will follow up'). Last contact was 2+ weeks ago.",
+          "40-60": "Next step exists but no date. Or date exists but it is rep-initiated, prospect has not committed.",
+          "60-80": "Specific next meeting scheduled. Prospect is initiating or co-driving. Close date has not moved.",
+          "80-100": "Mutual action plan with milestones. Meeting cadence is accelerating. New stakeholders entering the conversation. Close date is stable or pulled in."
+        },
+        "coverage_checklist": [
+          { "item": "Is there a specific next step?", "points": 15 },
+          { "item": "Is it on the calendar with a date?", "points": 15 },
+          { "item": "Who initiated it, rep or prospect?", "points": 10 },
+          { "item": "Has the close date moved? How many times?", "points": 15, "note": "+15 if stable, -10 per move" },
+          { "item": "Days since last meaningful contact?", "points": 15, "note": "+15 if <7 days, +5 if <14, 0 if >14, -10 if >30" },
+          { "item": "Is meeting cadence increasing, steady, or decaying?", "points": 15 },
+          { "item": "Are new stakeholders entering conversations?", "points": 15 }
+        ],
+        "coaching_prompt_example": "No meeting scheduled and last contact was 18 days ago. This deal is drifting. Try: 'I want to respect your timeline. Is this still a priority for this quarter, or has something shifted?'"
+      }
+    ]
+  },
+
+  "evidence_hierarchy": {
+    "description": "Four-level system for evaluating evidence quality. Applied as a multiplier to coverage score.",
+    "levels": [
+      { "level": 1, "label": "Assertion", "multiplier": 0.25, "description": "Rep's opinion, no source cited" },
+      { "level": 2, "label": "Prospect Quote", "multiplier": 0.50, "description": "Specific language from the buyer" },
+      { "level": 3, "label": "Quantified Consequence", "multiplier": 0.75, "description": "Impact is measured but not in dollars" },
+      { "level": 4, "label": "Dollar Impact", "multiplier": 1.00, "description": "Money is attached to the impact" }
+    ],
+    "formula": "Signal Score = Coverage (0-100) x Depth Multiplier (0.25 to 1.0)"
+  },
+
+  "deal_score": {
+    "description": "Composite 0-100 score from six weighted signal scores. Weights shift by deal stage.",
+    "stage_weights": {
+      "early": {
+        "label": "Discovery / Qualification",
+        "pain": 0.30,
+        "value": 0.20,
+        "people": 0.25,
+        "process": 0.05,
+        "competition": 0.10,
+        "momentum": 0.10
+      },
+      "mid": {
+        "label": "Evaluation / Proposal",
+        "pain": 0.15,
+        "value": 0.25,
+        "people": 0.25,
+        "process": 0.15,
+        "competition": 0.10,
+        "momentum": 0.10
+      },
+      "late": {
+        "label": "Negotiation / Closing",
+        "pain": 0.10,
+        "value": 0.15,
+        "people": 0.15,
+        "process": 0.25,
+        "competition": 0.10,
+        "momentum": 0.25
+      }
+    },
+    "formula": "Deal Score = sum(signal_score[i] * stage_weight[i]) for all 6 signals",
+    "color_mapping": [
+      { "range": "80-100", "color": "#1D9E75", "label": "Strong Signal" },
+      { "range": "60-79", "color": "#7F77DD", "label": "In Progress" },
+      { "range": "40-59", "color": "#EF9F27", "label": "Gaps to Address" },
+      { "range": "0-39", "color": "#D4537E", "label": "Needs Work" }
+    ]
+  },
+
+  "v1_product": {
+    "description": "Minimal viable product. Proves the core intelligence engine.",
+    "workflow": [
+      "Seller uploads a transcript or pastes notes",
+      "System parses the text",
+      "LLM extracts signal evidence from unstructured text",
+      "Evidence is structured into signal categories",
+      "Scoring engine evaluates signal strength and depth",
+      "System produces Deal Score and recommended next actions"
+    ],
+    "outputs": [
+      "Six signal scores (0-100 each)",
+      "Deal Score (0-100 composite)",
+      "Identified signal gaps with severity",
+      "Suggested next-step language per gap (2-3 options each)"
+    ],
+    "not_in_v1": [
+      "CRM integrations",
+      "Gong/call recording sync",
+      "Per-rep calibration",
+      "Historical pattern engine",
+      "Deal Rescue playbooks",
+      "Multi-user auth",
+      "API Bridge to Salesforce/HubSpot"
+    ]
+  },
+
+  "data_model": {
+    "deal": {
+      "id": "string (unique identifier)",
+      "name": "string (deal/company name)",
+      "stage": "string (early | mid | late)",
+      "created_at": "ISO 8601 datetime",
+      "updated_at": "ISO 8601 datetime",
+      "deal_score": "number (0-100, computed)",
+      "signals": {
+        "pain": {
+          "coverage_score": "number (0-100)",
+          "depth_level": "number (1-4)",
+          "depth_multiplier": "number (0.25 | 0.50 | 0.75 | 1.00)",
+          "final_score": "number (0-100, coverage * multiplier)",
+          "evidence": [
+            {
+              "text": "string (extracted evidence)",
+              "level": "number (1-4)",
+              "source": "string (transcript | notes | email)",
+              "timestamp": "ISO 8601 datetime"
+            }
+          ],
+          "gaps": [
+            {
+              "description": "string (what is missing)",
+              "severity": "string (critical | important | minor)",
+              "coaching_prompts": ["string (suggested question 1)", "string (suggested question 2)", "string (suggested question 3)"]
+            }
+          ]
+        },
+        "value": "same structure as pain",
+        "people": "same structure as pain",
+        "process": "same structure as pain",
+        "competition": "same structure as pain",
+        "momentum": "same structure as pain"
+      },
+      "deal_map": {
+        "known": ["string (confirmed facts about the deal)"],
+        "assumed": ["string (things the rep believes but has not confirmed)"],
+        "unknown": ["string (critical information not yet gathered)"]
+      },
+      "deal_focus": {
+        "priority_gaps": ["reference to gaps sorted by severity"],
+        "recommended_actions": ["string (specific next steps)"],
+        "next_step_language": ["string (what to say)"]
+      }
+    },
+    "conversation": {
+      "id": "string",
+      "deal_id": "string (reference to deal)",
+      "type": "string (transcript | notes | email)",
+      "content": "string (raw text)",
+      "uploaded_at": "ISO 8601 datetime",
+      "extracted_evidence": [
+        {
+          "signal_id": "string (pain | value | people | process | competition | momentum)",
+          "text": "string (relevant excerpt)",
+          "evidence_level": "number (1-4)",
+          "confidence": "number (0-1, how confident the extraction is)"
+        }
+      ]
+    }
+  },
+
+  "architecture": {
+    "layers": [
+      {
+        "name": "Input Layer",
+        "responsibility": "Accepts transcript text, pasted notes, or email content",
+        "tech_notes": "Simple text input. V1 does not need file upload beyond paste. Future: Gong API, email API."
+      },
+      {
+        "name": "Extraction Layer",
+        "responsibility": "LLM identifies signal evidence from unstructured text",
+        "tech_notes": "Prompt engineering with structured output. The LLM receives the text plus signal definitions and returns structured evidence per signal. JSON output mode recommended."
+      },
+      {
+        "name": "Structuring Layer",
+        "responsibility": "Maps extracted evidence to signal categories and classifies evidence level",
+        "tech_notes": "May be combined with extraction layer in V1. Separate layer allows swapping extraction models without changing scoring."
+      },
+      {
+        "name": "Scoring Engine",
+        "responsibility": "Evaluates coverage and depth per signal. Applies stage weights. Computes Deal Score.",
+        "tech_notes": "Deterministic logic, not LLM. Coverage from checklist matching. Depth from evidence level classification. Weights from stage_weights config."
+      },
+      {
+        "name": "Coaching Engine",
+        "responsibility": "Identifies gaps and generates next-step language",
+        "tech_notes": "Gap identification is deterministic (low-scoring signals with specific checklist items missing). Coaching prompt selection can be template-based in V1, LLM-generated in V2."
+      },
+      {
+        "name": "Output Layer",
+        "responsibility": "Assembles Deal Map, Deal Score, and Deal Focus into structured response",
+        "tech_notes": "JSON output for programmatic use. Rendered UI for human consumption."
+      },
+      {
+        "name": "Interface",
+        "responsibility": "Simple web UI for upload and analysis",
+        "tech_notes": "V1: single page app. Text input area, analyze button, results panel. React recommended."
+      }
+    ]
+  },
+
+  "calibration": {
+    "onboarding_intake": [
+      "Sales process structure (stages, typical approval steps)",
+      "Average deal size and sales cycle length",
+      "Typical number of stakeholders",
+      "Decision structure (who signs, budget ownership patterns)",
+      "Competitive environment (typical competitors, win/loss reasons)",
+      "Customer segments and buyer personas",
+      "Current methodology (if any)",
+      "Closed-won deal export (12-24 months with stage dates, contacts, deal size, cycle length)",
+      "Closed-lost deal export (same fields)",
+      "Product information and pricing structure",
+      "Sales content (pitch deck, case studies, objection handling)",
+      "Tech stack (CRM, call recording, engagement tools)",
+      "Brand voice and tone guidelines"
+    ],
+    "continuous_calibration": {
+      "description": "As the system processes more deals and outcomes become known, the scoring model calibrates using historical data.",
+      "what_it_learns": [
+        "Signals that strongly predict wins for this company",
+        "Signals commonly missing in lost deals",
+        "Signal progression patterns across successful deals",
+        "Individual rep scoring bias (future: per-rep calibration)"
+      ],
+      "proof_tiers": {
+        "minimum_viable_proof": "10-15 deals scored retroactively (mix of won, lost, stalled). Proves rubric separates winners from losers.",
+        "investor_grade_proof": "30-50 deals across 2-3 reps or selling motions. Shows it works across different people and complexities.",
+        "product_grade_proof": "100+ deals from a design partner. Full statistical validation."
+      }
+    }
+  },
+
+  "brand": {
+    "name": "Deal Insight",
+    "domain": "dealinsight.io",
+    "category": "Pipeline Intelligence",
+    "colors": {
+      "teal": { "hex": "#1D9E75", "role": "Primary product color. UI, buttons, links, active states." },
+      "amber": { "hex": "#EF9F27", "role": "Signal: Attention. Emerging issue." },
+      "pink": { "hex": "#D4537E", "role": "Signal: Opportunity. Movement. Momentum." },
+      "purple": { "hex": "#7F77DD", "role": "Signal: Critical insight. High-impact deal signal." },
+      "navy": { "hex": "#1B1F3B", "role": "Dark backgrounds." },
+      "gray": { "hex": "#777777", "role": "Tagline and secondary text." }
+    },
+    "rule": "Signal colors never decorate. They always communicate."
+  }
+}

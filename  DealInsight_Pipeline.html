@@ -1,0 +1,3034 @@
+<!DOCTYPE html>
+<!-- Deal Insight Pipeline Tracker (Demo) -->
+<html lang="en" class=""><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline Tracker · Deal Insight</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap');
+
+  /* ── Design Tokens ─────────────────────────────────────────── */
+  :root{
+    --navy:#1B1F3B; --navy-mid:#252a4a;
+    --green:#1D9E75; --green-dark:#178a65;
+    --bg:#f4f6f8; --surface:#ffffff;
+    --border:#e2e6ea; --border-mid:#d0d5dd;
+    --muted:#f8f9fa;
+    --text-primary:#111928; --text-secondary:#374151;
+    --text-muted:#6b7280; --text-xmuted:#9ca3af;
+    --hist-color:#7F77DD; --ai-color:#7F77DD;
+    --focus-ring:0 0 0 3px rgba(29,158,117,.25);
+    --text-xs:12px; --text-sm:13px; --text-base:14px;
+    --text-md:15px; --text-lg:17px; --text-xl:21px;
+    --sp-1:4px; --sp-2:8px; --sp-3:12px;
+    --sp-4:16px; --sp-5:20px; --sp-6:24px;
+    --r-sm:6px; --r-md:8px; --r-lg:10px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow:visible;height:auto}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);min-height:100vh;font-size:var(--text-base);color:var(--text-primary);-webkit-font-smoothing:antialiased;width:960px;margin:0 auto}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:var(--r-sm)}
+
+  /* Header */
+  #rainbow-bar{height:6px;background:linear-gradient(90deg, #D4537E 0%, #EF9F27 33%, #7F77DD 66%, #1D9E75 100%);position:relative;z-index:1;box-shadow:0 3px 6px rgba(0,0,0,0.1)}
+  #sticky-wrap{position:fixed;top:0;left:0;right:0;z-index:100;width:960px;margin:0 auto;padding:8px 16px 0;background:var(--bg)}
+  #header{background:#1B1F3B;padding:0;border-radius:var(--r-lg);overflow:visible;box-shadow:0 4px 20px rgba(0,0,0,0.25)}
+  #header-top-bar{background:#252a4a;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;border-radius:var(--r-lg) var(--r-lg) 0 0}
+  #month-summary{padding:18px 32px 22px}
+  #header-top{display:none}
+  #header-week{display:none}
+  #quota-bar-wrap{display:none}
+
+  /* Alerts */
+  .alert-wrap { position: relative; display: flex; justify-content: center; }
+  .alert-dd {
+    display: none; position: absolute; top: calc(100% + 8px);
+    left: 50%; transform: translateX(-50%);
+    width: 280px; border-radius: 10px; z-index: 100; overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  .alert-dd.open { display: block; }
+  .alert-dd-dark { background: #1e2444; border: 1px solid #3d4470; }
+  .alert-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px; cursor: pointer;
+  }
+  .alert-item-dark { border-bottom: 1px solid #2e3358; }
+  .alert-item-dark:hover { background: rgba(255,255,255,0.04); }
+  .alert-item-dark:last-child { border-bottom: none; }
+  .alert-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .alert-text { flex: 1; }
+  .alert-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; color: #e0e0f0; }
+  .alert-sub { font-size: 11px; line-height: 1.4; color: #9999BB; }
+
+  /* Toolbar */
+  #toolbar{display:flex;justify-content:space-between;align-items:center;margin:var(--sp-4) 0 var(--sp-3);flex-wrap:wrap;gap:var(--sp-2)}
+  #save-status{font-size:var(--text-sm);font-weight:600;color:var(--text-secondary)}
+  #acct-count{font-size:var(--text-sm);color:var(--text-muted)}
+
+  /* Cards */
+  .card{border-radius:var(--r-lg);border:1px solid var(--border);margin-bottom:var(--sp-2);background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.05);transition:box-shadow .15s,border-color .15s;scroll-margin-top:80px}
+  .card.open{overflow:visible}
+  .card:hover{border-color:var(--border-mid)}
+  .card.open{box-shadow:0 4px 16px rgba(0,0,0,.09);border-color:var(--border-mid)}
+  .card-header{display:flex;align-items:center;padding:13px var(--sp-4);cursor:pointer;gap:10px;border-bottom:0;min-height:52px;transition:background .12s}
+  .card.open .card-header{border-bottom:1px solid var(--border);position:sticky;top:100px;z-index:50;background:var(--card-bg,var(--surface));border-radius:var(--r-lg) var(--r-lg) 0 0}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .card-name{font-weight:700;font-size:var(--text-md);color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;line-height:1.3}
+  .card-sub{font-size:var(--text-sm);color:var(--text-muted);margin-top:2px;display:flex;gap:var(--sp-2);flex-wrap:wrap;line-height:1.4}
+  .card-meta{display:flex;gap:var(--sp-1);align-items:center;flex-shrink:0}
+  .tag{font-size:var(--text-xs);font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.02em;line-height:1.4}
+  .arr-tag{font-size:var(--text-sm);font-weight:700;color:#085041;background:#d1fae5;padding:3px 10px;border-radius:20px}
+  .chevron{color:var(--text-xmuted);font-size:var(--text-sm);transition:transform .2s}
+
+  /* Card body */
+  .card-body{padding:var(--sp-5);display:none}
+  .card.open .card-body{display:block}
+
+  /* Form elements */
+  .field-label{font-size:var(--text-xs);font-weight:700;color:var(--text-secondary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:var(--sp-1);display:block;line-height:1.4}
+  input,select,textarea{width:100%;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--border-mid);font-size:var(--text-base);color:var(--text-primary);font-family:inherit;outline:none;background:var(--surface);line-height:1.4;transition:border-color .12s,box-shadow .12s;box-sizing:border-box}
+  .deal-grid select,.deal-grid input{height:38px}
+  input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:var(--focus-ring)}
+  input:hover:not(:focus),select:hover:not(:focus),textarea:hover:not(:focus){border-color:#9ca3af}
+  textarea{resize:vertical;line-height:1.6}
+  select{cursor:pointer}
+  select.sel-dashed{border:1.5px dashed #9ca3af}
+  input::placeholder,textarea::placeholder{color:var(--text-xmuted)}
+
+  /* Checkboxes */
+  .cb-wrap{display:flex;align-items:center;gap:var(--sp-1);cursor:pointer;user-select:none;min-height:28px}
+  .cb-box{width:16px;height:16px;border-radius:4px;border:2px solid var(--border-mid);background:var(--surface);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+  .cb-box.checked{border-color:var(--green-dark);background:var(--green-dark)}
+  .cb-box.checked.cb-amber{border-color:#EF9F27;background:#EF9F27}
+  .cb-box.checked.cb-purple{border-color:#7F77DD;background:#7F77DD}
+  .cb-label{font-size:var(--text-sm);color:var(--text-secondary);font-weight:500;white-space:nowrap}
+  .cb-label.checked{color:#085041;font-weight:700}
+  .cb-label.checked.cbl-amber{color:#92400e}
+
+  /* Section dividers */
+  .section-div{border-top:1px solid var(--border);margin:var(--sp-4) 0;display:flex;align-items:center;gap:var(--sp-2)}
+  .section-div span{font-size:var(--text-xs);font-weight:700;color:var(--text-xmuted);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;padding-top:var(--sp-3)}
+
+  /* Call date select */
+  .cl-date-sel{width:auto;min-width:64px;max-width:76px;padding:4px 5px;font-size:var(--text-xs);border-radius:var(--r-sm);border:1px solid var(--border);background:var(--muted);color:var(--text-secondary);cursor:pointer;flex-shrink:0}
+
+  /* Product picker */
+  .prod-trigger{min-width:130px;padding:4px 8px;border:1px solid var(--border-mid);border-radius:var(--r-sm);background:var(--surface);font-size:13px;color:var(--text-secondary);cursor:pointer;white-space:normal;line-height:1.5}
+  .prod-trigger:hover{border-color:#9ca3af;background:var(--muted)}
+  .prod-menu{position:absolute;top:calc(100% + 4px);left:0;z-index:999;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:0 8px 24px rgba(0,0,0,.12);padding:4px 0;min-width:200px}
+  .prod-opt{padding:7px 14px;font-size:var(--text-sm);color:var(--text-secondary);cursor:pointer;white-space:nowrap}
+  .prod-opt:hover{background:var(--muted)}
+  .prod-opt.selected{color:#085041;font-weight:700;background:#ecfdf5}
+
+  /* Delete button */
+  .del-btn{font-size:var(--text-xs);color:#dc2626;background:none;border:1px solid #fca5a5;border-radius:var(--r-sm);padding:5px 12px;cursor:pointer;font-family:inherit;font-weight:600;transition:all .12s}
+  .del-btn:hover{background:#fef2f2;border-color:#f87171}
+
+  /* Add account */
+  #add-wrap{display:flex;gap:var(--sp-2);margin-top:var(--sp-3);background:var(--surface);border-radius:var(--r-lg);border:1.5px dashed var(--border-mid);padding:10px var(--sp-4)}
+  #add-input{flex:1;border:none;outline:none;font-size:var(--text-md);color:var(--text-secondary);font-family:inherit;background:transparent}
+  #add-input::placeholder{color:var(--text-xmuted)}
+  #add-btn{background:#2C2C2A;color:#fff;border:none;border-radius:var(--r-sm);padding:7px var(--sp-4);font-size:var(--text-sm);font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.02em;transition:background .12s}
+  #add-btn:hover{background:var(--navy-mid)}
+
+  /* Footer */
+  #footer{margin-top:var(--sp-4);font-size:var(--text-sm);color:var(--text-xmuted);text-align:center}
+
+  /* Search */
+  #search-input{font-family:inherit;transition:border-color .12s,box-shadow .12s}
+  #search-input:focus{border-color:#AFA9EC!important;box-shadow:0 0 0 3px rgba(175,169,236,.25)}
+  #search-clear.visible{display:flex}
+  #search-count{font-size:var(--text-xs);color:#9999BB;margin-top:4px;min-height:16px}
+
+  /* Main */
+  #main{width:960px;margin:0 auto;padding:var(--sp-5) var(--sp-4) 60px}
+
+
+  /* Tabs */
+  .bottom-tab-container{border-top:2px solid var(--border);margin-top:var(--sp-3)}
+  .bottom-tab-bar{display:flex;gap:0;align-items:flex-end;padding-top:var(--sp-2)}
+  .bottom-tab{padding:6px 13px;font-size:var(--text-xs);font-weight:700;letter-spacing:.06em;cursor:pointer;border:1.5px solid var(--border);border-bottom:none;border-radius:var(--r-sm) var(--r-sm) 0 0;background:var(--muted);color:var(--text-xmuted);user-select:none;transition:all .12s;margin-right:3px;position:relative;top:1px;text-transform:uppercase;min-height:30px;display:flex;align-items:center}
+  .bottom-tab:hover{color:var(--text-secondary);background:#eaedf0}
+  .bottom-tab.active{background:var(--surface);border-color:var(--border-mid);border-bottom:1.5px solid var(--surface);z-index:1;color:var(--text-primary)}
+  .bottom-tab.active[data-tab="history"]{border-top:2.5px solid var(--hist-color)}
+  .bottom-tab.active[data-tab="ai"]{border-top:2.5px solid var(--ai-color)}
+  .bottom-tab-panel{display:none;border:1.5px solid var(--border-mid);border-radius:0 var(--r-sm) var(--r-sm) var(--r-sm);background:var(--surface);padding:2px 0 0}
+  .bottom-tab-panel.active{display:block}
+  .bottom-tab-panel[data-theme="history"]{background:var(--surface);border-color:var(--border-mid)}
+  .bottom-tab-panel[data-theme="ai"]{background:var(--surface);border-color:var(--border-mid)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+  /* AI tab */
+  .ai-section{padding:var(--sp-3);font-family:inherit}
+  .ai-btn{display:inline-flex;align-items:center;padding:7px 14px;border-radius:var(--r-sm);border:none;font-size:var(--text-xs);font-weight:700;cursor:pointer;margin:3px 3px 3px 0;letter-spacing:.04em;transition:all .12s;font-family:inherit}
+  .ai-btn-primary{background:var(--ai-color);color:#fff}.ai-btn-primary:hover{background:#534AB7}
+  .ai-btn-secondary{background:var(--muted);color:#534AB7;border:1px solid var(--border-mid)}.ai-btn-secondary:hover{background:#e5e7eb}
+  .ai-output{margin-top:var(--sp-3);background:var(--muted);border:1.5px solid var(--border-mid);border-radius:var(--r-md);padding:var(--sp-4);font-size:var(--text-base);line-height:1.7;color:var(--text-primary);white-space:pre-wrap;min-height:60px;display:none}
+  .ai-output.visible{display:block}
+  .ai-output-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-2)}
+  .ai-output-title{font-size:var(--text-xs);font-weight:800;letter-spacing:.08em;color:var(--ai-color);text-transform:uppercase}
+  .ai-copy-btn{font-size:var(--text-xs);font-weight:700;color:#7F77DD;background:none;border:1px solid var(--border-mid);border-radius:var(--r-sm);padding:3px 10px;cursor:pointer;transition:background .12s}
+  .ai-copy-btn:hover{background:#f3f4f6}
+  .ai-spinner{display:inline-block;width:13px;height:13px;border:2px solid var(--border-mid);border-top-color:var(--ai-color);border-radius:50%;animation:spin .7s linear infinite;margin-left:7px;vertical-align:middle}
+  .ai-key-row{display:flex;gap:var(--sp-2);align-items:center;margin-bottom:var(--sp-3);padding:var(--sp-2) 10px;background:var(--muted);border:1px solid var(--border-mid);border-radius:var(--r-sm)}
+  .ai-key-input{flex:1;font-size:var(--text-sm);border:1px solid var(--border-mid);border-radius:var(--r-sm);padding:5px var(--sp-2);font-family:monospace;background:#fff}
+  .ai-key-save{font-size:var(--text-sm);font-weight:700;background:var(--ai-color);color:#fff;border:none;border-radius:var(--r-sm);padding:5px 12px;cursor:pointer}
+  .ai-transcript{width:100%;font-size:var(--text-sm);border:1.5px solid var(--border-mid);border-radius:var(--r-sm);padding:var(--sp-2);font-family:inherit;resize:vertical;margin-top:var(--sp-2);min-height:80px}
+
+  /* Boot lock — removed by JS immediately, prevents pre-rendered card flash */
+  html.booting .card-body{display:none!important}
+  html.booting .card{overflow:hidden}
+</style>
+<script>document.documentElement.classList.add('booting');</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ── Excel export (XLSX via SheetJS) ─────────────────────────────────
+function exportXLSX(){
+  const headers = [
+    "","Stage","Account Name","Notes","Close Month","ARR ($)",
+    "Forecast Bucket","ERP","Source","Competitors",
+    "CAM","Presales","BD","Contacts",
+    "Last Step","Next Step","What Needs to Happen","What Could Get in the Way",
+    "SIGNALS ✓","Pricing Sent ✓","1st Call Date","2nd Call Date",
+    "HubSpot Deal #","CAM Rewards Eligible"
+  ];
+
+  const rows = state.ids
+    .filter(id => state.deals[id])
+    .map(id => {
+      const d = state.deals[id];
+      const cl = d.checklist||{};
+      const cd = d.cldate||{};
+      return [
+        "●",
+        d.stage||'', d.name||'', d.notes||'', d.targetClose||'', d.arr||'',
+        (d.stage==="Open" ? (d.bucket||'') : ''), cleanVal(d.erp), cleanVal(d.source), d.competitors||'',
+        cleanVal(d.cam), cleanVal(d.presales), cleanVal(d.bd), d.contacts||'',
+        d.lastStep||'', d.nextStep||'', d.criticalPath||'', d.risks||'',
+        cl.signals?'YES':'', d.pricingSent?'YES':'',
+        cd.call1||'', cd.call2||'',
+        d.hubspot||'', d.camRewards||''
+      ];
+    });
+
+  // Section label row, header row, helper row, then data
+  const sectionRow = ["","","CORE","","","","DEAL","","","","TEAM","","","","ACTIVITY","","","","CHECKLIST","","","","","","AFTER CLOSE",""];
+  const helperRow  = ["","Won/Open/Booked/Reschedule/Hot/Closed Lost/Passive/Nurture","Unique name","Free text notes","e.g. MARCH","Numbers only","Open only","Salesforce/HubSpot/Other","Inbound/Outbound/Referral/Event/Other","","","","","","Date + what happened","Date + what's next","","","YES or blank","YES or blank","YES or blank","YES or blank","e.g. 2/15/26","e.g. 3/4/26","",""];
+
+  const wb = XLSX.utils.book_new();
+  const wsData = [sectionRow, headers, helperRow, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Column widths
+  ws['!cols'] = [3,14,28,35,14,14,16,10,12,18,22,16,16,30,35,35,35,35,10,10,10,12,14,14,18,22]
+    .map(w => ({wch: w}));
+
+  // Row color coding by stage
+  // Rows 0=sectionRow, 1=headers, 2=helperRow, data starts at row 3
+  // dot color per stage, row bg for Won and Closed Lost only
+  const dotColors = {
+    "Won":         "1D9E75",  // teal
+    "Open":    "7B72D3",  // purple
+    "Booked":    "EF9F27",  // amber
+    "Reschedule":  "D8547C",  // pink
+    "Hot":         "F2BACC",  // soft pink
+    "Closed Lost": "92CFB2",  // soft teal
+    "Passive":     "F4D19C",  // soft amber
+    "Nurture":     "BDB8E9",  // soft purple
+  };
+  const rowBg = {
+    "Won":         "E1F5EE",  // teal light
+    "Closed Lost": "f4fdf8",  // soft teal
+  };
+  const numCols = headers.length;
+  rows.forEach((row, ri) => {
+    const stage = row[1]; // Stage is col index 1 (col B)
+    const excelRow = ri + 3;
+    const dotColor = dotColors[stage];
+    const bg = rowBg[stage];
+    // Color the dot cell (col 0)
+    const dotRef = XLSX.utils.encode_cell({r: excelRow, c: 0});
+    if(!ws[dotRef]) ws[dotRef] = {t:'s', v:'●'};
+    ws[dotRef].s = {
+      font: { color: { rgb: dotColor||"9CA3AF" }, sz: 14 },
+      alignment: { horizontal: "center", vertical: "center" }
+    };
+    // Apply Inter 12pt + wrap text to all data cells; bg for Won/Closed Lost
+    for(let ci = 0; ci < numCols; ci++){
+      const cellRef = XLSX.utils.encode_cell({r: excelRow, c: ci});
+      if(!ws[cellRef]) ws[cellRef] = {t:'s', v:''};
+      const existingS = ws[cellRef].s || {};
+      ws[cellRef].s = {
+        ...existingS,
+        font: { ...(existingS.font||{}), name: "Inter", sz: 12 },
+        alignment: { wrapText: true, vertical: "top", ...(existingS.alignment||{}) },
+        fill: bg && ci > 0
+          ? { patternType: "solid", fgColor: { rgb: bg } }
+          : (existingS.fill || undefined)
+      };
+    }
+  });
+
+  // Set fixed row height for all data rows (single line height = 18pt)
+  if(!ws['!rows']) ws['!rows'] = [];
+  // Header rows
+  ws['!rows'][0] = { hpt: 18 };
+  ws['!rows'][1] = { hpt: 18 };
+  ws['!rows'][2] = { hpt: 15 };
+  // Data rows
+  for(let ri = 0; ri < rows.length; ri++){
+    ws['!rows'][ri + 3] = { hpt: 18 };
+  }
+
+  // Add dropdown validation for key columns
+  // SheetJS community doesn't support data validation natively, but we add a Dropdowns sheet for reference
+  // Build Dropdowns sheet with full CAM list
+  const camList = CAM_LIST;
+  const maxRows = Math.max(8, camList.length);
+  const stages  = ["Won","Open","Hot","Nurture","Reschedule","Closed Lost",""];
+  const forecasts = ["Commit","Upside","","","","","",""];
+  const erps    = ["P21","BisTrack","Eclipse","Prelude","","","",""];
+  const sources = ["Inbound","Outbound","Referral","Event","Other","","",""];
+  const bds     = ["Connor","Taylor","NA","","","","",""];
+  const dropWsData = [["Stage","Forecast","ERP","Source","BD","CAM"]];
+  for(let i=0;i<maxRows;i++){
+    dropWsData.push([
+      stages[i]||"", forecasts[i]||"", erps[i]||"", sources[i]||"", bds[i]||"", camList[i]||""
+    ]);
+  }
+  const dropWs = XLSX.utils.aoa_to_sheet(dropWsData);
+  dropWs['!cols'] = [14,12,10,12,10,28].map(w=>({wch:w}));
+
+  // Freeze first 2 columns (dot + account name)
+  // Freeze cols A+B+C and rows 1-3 (section/header/helper)
+  ws['!freeze'] = {xSplit:3, ySplit:3, topLeftCell:"D4", activeCell:"D4", state:"frozen"};
+  // Pipeline first, Dropdowns second
+  XLSX.utils.book_append_sheet(wb, ws, "Pipeline");
+  XLSX.utils.book_append_sheet(wb, dropWs, "Dropdowns");
+
+  const date = new Date();
+  const stamp = (date.getMonth()+1)+'_'+date.getDate()+'_'+String(date.getFullYear()).slice(2);
+  XLSX.writeFile(wb, `DealInsight_Pipeline_${stamp}.xlsx`);
+
+  const status = document.getElementById('excel-status');
+  status.textContent = `✓ Exported ${rows.length} deals`;
+  setTimeout(()=>status.textContent='', 4000);
+}
+
+// Column name aliases — case-insensitive, any order in Excel
+const COL_ALIASES = {
+  name:        ['account name','account','company','company name','name'],
+  stage:       ['stage','deal stage','status'],
+  closeMonth:  ['close month','close date','target close','closing month','month'],
+  arr:         ['arr','arr ($)','arr($)','annual recurring revenue','revenue','deal value','amount'],
+  bucket:      ['forecast bucket','forecast','bucket'],
+  erp:         ['erp','erp system','crm version'],
+  source:      ['source','lead source'],
+  competitors: ['competitors','competition','competitive'],
+  cam:         ['cam','channel account manager','partner manager'],
+  presales:    ['presales','pre-sales','solutions engineer','se'],
+  bd:          ['bd','business development'],
+  contacts:    ['contacts','contact','key contacts'],
+  lastStep:    ['last step','last activity','last action','what happened'],
+  nextStep:    ['next step','next action','next','action item'],
+  criticalPath:['what needs to happen','critical path','needs to happen'],
+  risks:       ['what could get in the way','risks','risk','blockers'],
+  notes:       ['notes','note','comments'],
+  cl_signals:  ['signals','signals ✓','signals done'],
+  pricingSent: ['pricing sent','pricing sent ✓','pricing'],
+  cldate_call1:['1st call date','first call','call 1 date','1st call'],
+  cldate_call2:['2nd call date','second call','call 2 date','2nd call'],
+  hubspot:     ['hubspot deal #','hubspot','hubspot id','deal id','hs deal'],
+  camRewards:  ['cam rewards eligible','cam rewards','rewards eligible'],
+};
+
+function buildColMap(headerRow){
+  const map = {};
+  headerRow.forEach((h, i) => {
+    const norm = (h||'').toString().toLowerCase().trim();
+    for(const [field, aliases] of Object.entries(COL_ALIASES)){
+      if(aliases.includes(norm) && !(field in map)) map[field] = i;
+    }
+  });
+  return map;
+}
+
+function loadExcel(input){
+  const file = input.files[0];
+  if(!file) return;
+  const status = document.getElementById('excel-status');
+  status.textContent = 'Reading...';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+      // Auto-detect header row (first row containing "account name" / "account" / "company")
+      let headerIdx = -1;
+      for(let i=0; i<Math.min(rows.length,6); i++){
+        const norm = rows[i].map(c=>(c||'').toString().toLowerCase().trim());
+        if(norm.some(c=>['account name','account','company','name'].includes(c))){
+          headerIdx = i; break;
+        }
+      }
+      if(headerIdx === -1){
+        status.textContent = '⚠ No header row found - needs an Account Name column';
+        return;
+      }
+
+      const colMap = buildColMap(rows[headerIdx]);
+      if(!('name' in colMap)){
+        status.textContent = '⚠ Could not find Account Name column';
+        return;
+      }
+
+      const str    = v => (v||'').toString().trim();
+      const yn     = v => str(v).toUpperCase()==='YES';
+      const get    = (r, field) => field in colMap ? r[colMap[field]] : undefined;
+      const fmtDate= v => {
+        if(!v) return '';
+        if(v instanceof Date) return (v.getMonth()+1)+'/'+(v.getDate())+'/'+String(v.getFullYear()).slice(2);
+        return str(v);
+      };
+
+      let imported=0, created=0;
+      for(let i=headerIdx+1; i<rows.length; i++){
+        const r    = rows[i];
+        const name = str(get(r,'name'));
+        if(!name) continue;
+
+        const existingId = Object.keys(state.deals).find(id =>
+          state.deals[id].name.toLowerCase() === name.toLowerCase()
+        );
+        const id = existingId || 'xl_'+name.toLowerCase().replace(/[^a-z0-9]/g,'_').slice(0,30)+'_'+Date.now();
+        const d  = existingId ? {...state.deals[existingId]} : {...EMPTY, id, name};
+        const s  = field => { const v=get(r,field); return v!==undefined ? str(v) : ''; };
+
+        d.name = name;
+        if(s('stage'))       d.stage        = s('stage');
+        if(s('closeMonth'))  d.targetClose  = s('closeMonth');
+        if(s('arr'))         d.arr          = s('arr').replace(/[^0-9.,]/g,'');
+        if(s('bucket'))      d.bucket       = s('bucket');
+        if(s('erp'))         d.erp          = s('erp');
+        if(s('source'))      d.source       = s('source');
+        if(s('competitors')) d.competitors  = s('competitors');
+        if(s('cam'))         d.cam          = s('cam');
+        if(s('presales'))    d.presales     = s('presales');
+        if(s('bd'))          d.bd           = s('bd');
+        if(s('contacts'))    d.contacts     = s('contacts');
+        if(s('lastStep'))    d.lastStep     = s('lastStep');
+        if(s('nextStep'))    d.nextStep     = s('nextStep');
+        if(s('criticalPath'))d.criticalPath = s('criticalPath');
+        if(s('risks'))       d.risks        = s('risks');
+        if(s('notes'))       d.notes        = s('notes');
+        if(s('hubspot'))     d.hubspot      = s('hubspot');
+        if(s('camRewards'))  d.camRewards   = s('camRewards');
+
+        if(!d.checklist) d.checklist={};
+        const mv=get(r,'cl_signals');  if(mv!==undefined && yn(mv))  d.checklist.signals=true;
+        const psv=get(r,'pricingSent');if(psv!==undefined && yn(psv)) d.pricingSent=true;
+
+        if(!d.cldate) d.cldate={};
+        const c1=get(r,'cldate_call1'); if(c1) d.cldate.call1=fmtDate(c1);
+        const c2=get(r,'cldate_call2'); if(c2) d.cldate.call2=fmtDate(c2);
+        state.deals[id] = d;
+        imported++;
+      }
+      saveState();
+      renderAll();
+      status.textContent = `✓ ${imported} deals synced${created?' ('+created+' new)':''}`;
+      setTimeout(()=>status.textContent='', 5000);
+      input.value='';
+    } catch(err){
+      status.textContent = '⚠ Error reading file';
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+</script>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="sticky-wrap">
+<div id="header">
+  <!-- Top bar: logo, search, controls -->
+  <div id="header-top-bar">
+    <!-- Left: Logo -->
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+      <svg width="42" height="42" viewBox="0 0 64 64" style="flex-shrink:0;display:block;">
+        <rect x="6" y="50" width="10" height="14" rx="2.5" fill="#D4537E" opacity="0.6"/>
+        <rect x="20" y="40" width="10" height="24" rx="2.5" fill="#EF9F27" opacity="0.75"/>
+        <rect x="34" y="28" width="10" height="36" rx="2.5" fill="#AFA9EC" opacity="0.85"/>
+        <rect x="48" y="18" width="10" height="46" rx="2.5" fill="#1D9E75" opacity="1"/>
+      </svg>
+      <div>
+        <div style="font-family:'Nunito',sans-serif;font-size:20px;font-weight:700;line-height:1.1;"><span style="color:#E8779E;">Pipeline</span><span style="color:#AFA9EC;"> Tracker</span></div>
+        <div style="font-size:10px;color:#9999BB;letter-spacing:1.5px;text-transform:uppercase;line-height:1.2;">Deal Insight</div>
+      </div>
+    </div>
+    <!-- Center: Alerts + Timeframe pills -->
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;">
+      <div class="alert-wrap" id="alertWrap_main" style="position:relative">
+        <button class="toolbar-pill" onclick="toggleAlert('main')" style="background:#fff;border:none;border-radius:8px;padding:8px 16px;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;color:#1B1F3B;letter-spacing:0.5px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#D4537E;flex-shrink:0;box-shadow:0 0 0 2px rgba(212,83,126,0.25)"></span>
+          <span id="alert-count-label">0 ALERTS</span>
+          <svg class="chev" id="chev_main" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#1B1F3B" stroke-width="2" style="transition:transform .2s"><polyline points="2,3 5,7 8,3"/></svg>
+        </button>
+        <div class="alert-dd alert-dd-dark" id="dd_main"></div>
+      </div>
+      <div style="position:relative;" id="period-wrap">
+        <select id="month-filter" style="display:none">
+          <option value="" selected>Full year</option>
+          <option value="November 2025">November 2025</option>
+          <option value="December 2025">December 2025</option>
+          <option value="January 2026">January 2026</option>
+          <option value="February 2026">February 2026</option>
+          <option value="March 2026">March 2026</option>
+          <option value="April 2026">April 2026</option>
+          <option value="May 2026">May 2026</option>
+          <option value="June 2026">June 2026</option>
+          <option value="July 2026">July 2026</option>
+          <option value="August 2026">August 2026</option>
+          <option value="September 2026">September 2026</option>
+          <option value="October 2026">October 2026</option>
+          <option value="November 2026">November 2026</option>
+          <option value="December 2026">December 2026</option>
+          <option value="__ytd__">YTD (Jul 2025 - Mar 2026)</option>
+        </select>
+        <button id="period-pill" onclick="togglePeriodDD()" style="background:#fff;border:none;border-radius:8px;padding:8px 16px;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;color:#1B1F3B;letter-spacing:0.5px;text-transform:uppercase;">
+          <span id="period-label">Full year</span>
+          <svg id="period-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#1B1F3B" stroke-width="2" style="transition:transform .2s"><polyline points="2,3 5,7 8,3"/></svg>
+        </button>
+        <div id="period-dd" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:200px;background:#1e2444;border:1px solid #3d4470;border-radius:10px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.2);max-height:280px;overflow-y:auto;">
+        </div>
+      </div>
+    </div>
+    <!-- Right: Search, Up, Down, Toggle, SS -->
+    <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;">
+      <div id="search-icon-btn" onclick="toggleSearchBar()" style="width:34px;height:34px;border-radius:6px;border:1px solid #3d4470;background:#1e2444;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9999BB" stroke-width="2.5"><circle cx="11" cy="11" r="6"/><line x1="21" y1="21" x2="15" y2="15"/></svg>
+      </div>
+      <div style="position:relative;">
+        <div onclick="toggleDataDD('import')" style="width:34px;height:34px;border-radius:6px;border:1px solid #3d4470;background:#2e3460;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Import">
+          <svg width="15" height="15" viewBox="0 0 10 10" fill="none" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round"><line x1="5" y1="8" x2="5" y2="2"/><polyline points="2.5,4.5 5,2 7.5,4.5"/></svg>
+        </div>
+        <div id="import-dd" style="display:none;position:absolute;top:calc(100% + 6px);right:0;width:120px;background:#1e2444;border:1px solid #3d4470;border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.25);">
+          <label style="display:block;padding:10px 14px;font-size:12px;font-weight:500;color:#e0e0f0;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='#2e3460'" onmouseout="this.style.background='transparent'">Import JSON<input type="file" accept=".json" onchange="importJSON(this);toggleDataDD('import')" style="display:none"></label>
+          <div style="height:1px;background:#3d4470;margin:0 8px;"></div>
+          <label style="display:block;padding:10px 14px;font-size:12px;font-weight:500;color:#e0e0f0;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='#2e3460'" onmouseout="this.style.background='transparent'">Import Excel<input type="file" accept=".xlsx,.xls" onchange="loadExcel(this);toggleDataDD('import')" style="display:none"></label>
+        </div>
+      </div>
+      <div style="position:relative;">
+        <div onclick="toggleDataDD('export')" style="width:34px;height:34px;border-radius:6px;border:1px solid #3d4470;background:#2e3460;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Export">
+          <svg width="15" height="15" viewBox="0 0 10 10" fill="none" stroke="#EF9F27" stroke-width="1.5" stroke-linecap="round"><line x1="5" y1="2" x2="5" y2="8"/><polyline points="2.5,5.5 5,8 7.5,5.5"/></svg>
+        </div>
+        <div id="export-dd" style="display:none;position:absolute;top:calc(100% + 6px);right:0;width:120px;background:#1e2444;border:1px solid #3d4470;border-radius:8px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.25);">
+          <div onclick="exportJSON();toggleDataDD('export')" style="padding:10px 14px;font-size:12px;font-weight:500;color:#e0e0f0;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='#2e3460'" onmouseout="this.style.background='transparent'">Export JSON</div>
+          <div style="height:1px;background:#3d4470;margin:0 8px;"></div>
+          <div onclick="exportXLSX();toggleDataDD('export')" style="padding:10px 14px;font-size:12px;font-weight:500;color:#e0e0f0;cursor:pointer;font-family:inherit;" onmouseover="this.style.background='#2e3460'" onmouseout="this.style.background='transparent'">Export Excel</div>
+        </div>
+      </div>
+      <div id="theme-toggle" onclick="toggleTheme()" style="width:38px;height:22px;border-radius:11px;background:#3d4470;position:relative;cursor:pointer;" title="Noon/Midnight toggle"><div id="theme-toggle-dot" style="width:18px;height:18px;border-radius:50%;background:#BDB8E9;position:absolute;top:2px;left:2px;transition:all .2s"></div></div>
+      <div style="width:34px;height:34px;border-radius:50%;background:#E8779E;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;letter-spacing:0.5px;flex-shrink:0;">SS</div>
+    </div>
+  </div>
+  <!-- Search bar (hidden, expands below toolbar) -->
+  <div id="search-bar-row" style="display:none;background:#252a4a;padding:6px 32px 8px;">
+    <div style="position:relative;max-width:400px;margin:0 auto;">
+      <input id="search-input" type="text" placeholder="Search accounts, contacts, deals..." oninput="filterSearch(this.value)" style="width:100%;padding:8px 14px 8px 32px;border:1px solid #3d4470;border-radius:8px;font-size:12px;background:#1e2444;color:#e0e0f0;outline:none;font-family:inherit;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9999BB" stroke-width="2.5" style="position:absolute;left:12px;top:10px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <button id="search-clear" onclick="clearSearch()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#9999BB;font-size:14px;cursor:pointer;display:none;background:none;border:none;padding:0;line-height:1;">✕</button>
+    </div>
+    <div id="search-count" style="font-size:11px;color:#9999BB;text-align:center;margin-top:4px;min-height:0;"></div>
+  </div>
+  <!-- Rainbow bar -->
+  <div id="rainbow-bar"></div>
+</div>
+</div><!-- /sticky-wrap -->
+
+<div id="summary-panel" style="width:960px;margin:0 auto;padding:94px 16px 0;">
+  <div style="background:#1B1F3B;border-radius:var(--r-lg);overflow:hidden;margin-top:8px;">
+  <!-- Summary panel -->
+  <div id="month-summary"></div>
+  <!-- Hidden elements for header box data (used by updateHeader) -->
+  <span id="hdrbox-closed" style="display:none"></span>
+  <span id="hdrbox-closed-pct" style="display:none"></span>
+  <span id="hdrbox-commit" style="display:none"></span>
+  <span id="hdrbox-commit-pct" style="display:none"></span>
+  <span id="hdrbox-upside" style="display:none"></span>
+  <span id="hdrbox-upside-pct" style="display:none"></span>
+  <span id="hdrbox-stretch" style="display:none"></span>
+  <span id="hdrbox-stretch-pct" style="display:none"></span>
+  <div id="quota-bar-wrap" style="display:none;">
+    <div class="bar-seg" id="bar-closed" style="background:#1D9E75;width:100%"></div>
+    <div class="bar-seg" id="bar-commit" style="background:#D4537E;width:0%"></div>
+    <div class="bar-seg" id="bar-upside" style="background:#EF9F27;width:0%"></div>
+    <div class="bar-seg" id="bar-stretch" style="background:#7F77DD;width:0%"></div>
+  </div>
+  </div>
+</div>
+
+<div id="main" style="padding-top:0">
+  <div id="toolbar" style="margin:14px 0 14px;">
+    <div id="save-status" style="display:none;"></div>
+    <div id="excel-status" style="display:none;"></div>
+  </div>
+
+    <div id="deals-list"></div>
+
+  </div><!-- /main -->
+
+      <div id="cv-week" style="font-size:12px;color:#6b7280;margin-bottom:22px"></div>
+    <div id="cv-body"></div>
+  </div>
+
+  <div id="add-wrap">
+    <input id="add-input" placeholder="Add another account..." onkeydown="if(event.key==='Enter')addAccount()">
+    <button id="add-btn" onclick="addAccount()">+ Add</button>
+  </div>
+<div id="footer">deal insight · Your data saves in this browser automatically. Keep this file on your desktop — open it anytime, no internet needed.</div>
+
+<script>
+const QUOTA_BY_MONTH = {
+  "July 2025": 30000,
+  "August 2025": 30000,
+  "September 2025": 30000,
+  "October 2025": 30000,
+  "November 2025": 30000,
+  "December 2025": 45000,
+  "January 2026": 60000,
+  "February 2026": 60000,
+  "March 2026": 60000,
+  "April 2026": 60000,
+  "May 2026": 60000,
+  "June 2026": 60000
+};
+const QUOTA = 60000;
+
+function getQuota(month){ return QUOTA_BY_MONTH[month] || QUOTA; }
+
+// Simple exact match (case-insensitive) for month filter
+function matchesMonthFilter(targetClose, filterVal){
+  if(!filterVal) return true;
+  return (targetClose||"").trim().toLowerCase() === filterVal.trim().toLowerCase();
+}
+const STAGES = ["Won","Open","Booked","Reschedule","Hot","Closed Lost","Passive","Nurture"];
+const FORECAST_BUCKETS = ["Won","Commit","Upside","Not Forecasted"];
+const ERPS = ["BisTrack","P21","Eclipse","Prelude","Other"];
+const SOURCES = ["Inbound","Outbound","Referral","Event","Expansion","Other"];
+const PRODUCTS = ["EDA","Financial Statements","Budgets & Forecasts","Rebates","CRM","Insights"];
+const STAGE_META = {
+  "Won":        {label:"Won",        color:"#085041", bg:"#E1F5EE", dot:"#1D9E75", cardBg:"#f4fdf8"},
+  "Open":   {label:"Open",   color:"#3C3489", bg:"#EEEDFE", dot:"#7B72D3", cardBg:"#f9f7fe"},
+  "Booked":   {label:"Booked",   color:"#7A500F", bg:"#FAEEDA", dot:"#EF9F27", cardBg:"#fffdf5"},
+  "Reschedule": {label:"Reschedule", color:"#72243E", bg:"#FBEAF0", dot:"#D8547C", cardBg:"#fef6f8"},
+  "Hot":        {label:"Hot",        color:"#72243E", bg:"#fef9fb", dot:"#F2BACC", cardBg:"#fef9fb"},
+  "Nurture":    {label:"Nurture",    color:"#3C3489", bg:"#f9f7fe", dot:"#BDB8E9", cardBg:"#f9f7fe"},
+  "Closed Lost":{label:"Closed Lost",color:"#085041", bg:"#f4fdf8", dot:"#92CFB2", cardBg:"#f4fdf8"},
+  "Passive":    {label:"Passive",    color:"#7A500F", bg:"#fffdf5", dot:"#F4D19C", cardBg:"#fffdf5"},
+};
+const FORECAST_META = {
+  "Won":     {dot:"#1D9E75",bg:"#E1F5EE",text:"#085041"},
+  "Commit":  {dot:"#D4537E",bg:"#FBEAF0",text:"#72243E"},
+  "Upside":  {dot:"#EF9F27",bg:"#FAEEDA",text:"#633806"},
+  "Not Forecasted": {dot:"#7F77DD",bg:"#EEEDFE",text:"#3C3489"},
+};
+
+const CAM_LIST = ["Abigail Ball (abbey)", "Avery Pint", "Caden Flaherty", "Carrie Sylvester", "Carter Sheehan", "Chris\u00a0Ancius", "Claire McLean", "Cody Sagen", "Deb Ogburn", "Derek Egan", "Dominick Paraschak", "Gerry Mortimer", "Haley Stoneman", "Jeff Sarnelli", "Jimmy Moschitto", "John Gilk", "Krissa Wink", "Kurt Mayers", "Kylie Riley", "Lauren Lay", "Linda Snively", "Mac Feely", "Mary kay Behar", "Mary King", "Matt Arnold", "Mikel Watson", "Reed Rediger", "Rochelle Alex", "Scott Potalivo", "Sean Keeley", "Shawn Ross", "Susan Finney", "Tiffany Cifrodella", "Tracy Cooper"];
+const CAM_DATA = [{"name": "Demo Partner 1", "email": "partner1@example.com", "erp": "Salesforce", "notes": "Strong relationship. Refers deals regularly.", "accounts": ["Acme Manufacturing"], "state": "New York", "tz": "Eastern Time (ET)"}, {"name": "Demo Partner 2", "email": "partner2@example.com", "erp": "HubSpot", "notes": "New partnership. Building trust.", "accounts": ["Summit Logistics"], "state": "California", "tz": "Pacific Time (PT)"}];
+const CHECKLIST_PRE = [
+  {id:"call1"},{id:"fu1"},{id:"call2"},{id:"fu2"},
+  {id:"deal"},{id:"proposal"},{id:"signals"},{id:"sow"},
+];
+const CHECKLIST_POST = [
+  {id:"sow",label:"SOW"},
+];
+const CHECKLIST = [...CHECKLIST_PRE, ...CHECKLIST_POST];
+
+const DEFAULTS = [
+  {id:"acme_manufacturing",name:"Acme Manufacturing",erp:"Salesforce",bucket:"Upside",stage:"Hot",closedLost:null,cam:"",arr:"72000",targetClose:"",source:"Inbound",contacts:"Sarah Chen - VP Operations, Marcus Rivera - CFO, Dana Kim - IT Director",nextStep:"3/20 Follow up on ROI analysis. Marcus wants to see cost breakdown.",notes:"Strong champion in Sarah. She ran a manual version of our analysis on 3 deals and got buy-in from her team.",competitors:"Gong, Clari",products:"",hubspot:"",gong:"",pain:"Sarah spends 4 hours per week manually scoring deals in a spreadsheet. Marcus does not trust the forecast. 40% of committed deals slipped last quarter.",desiredState:"Automated deal scoring that leadership trusts. Single source of truth for pipeline health.",likes:"Evidence-based scoring resonated. Sarah said the coaching prompts alone would save her team 10 hours a week.",risks:"Marcus is cost-sensitive. IT wants to understand data security before approving.",presales:"",bd:"",cldate:{call1:"2/15/26",call2:"3/1/26"},checklist:{call1:true,call2:true}},
+  {id:"summit_logistics",name:"Summit Logistics",erp:"HubSpot",bucket:"Upside",stage:"Open",closedLost:null,cam:"",arr:"48000",targetClose:"June 2026",source:"Outbound",contacts:"James Park - CRO, Alicia Torres - Sales Director",nextStep:"4/1 Demo with full sales leadership team. Need to show Deal Score in action.",notes:"James saw our LinkedIn post about shadow CRMs and reached out. Perfect ICP.",competitors:"Salesforce Einstein",products:"",hubspot:"",gong:"",pain:"Reps maintain separate spreadsheets. Forecast accuracy is under 60%. Pipeline reviews take 3 hours per week per manager.",desiredState:"Reps sell, system captures intelligence. Forecast accuracy above 80%.",likes:"The rep-first positioning. James said every other tool is built for managers.",risks:"Alicia wants to see it work with HubSpot before committing. No budget until Q3.",presales:"",bd:"",cldate:{call1:"3/5/26"},checklist:{call1:true}},
+  {id:"brightwave_tech",name:"Brightwave Technologies",erp:"Salesforce",bucket:"Won",stage:"Won",closedLost:null,cam:"",arr:"36000",implFee:"5000",targetClose:"March 2026",source:"Referral",contacts:"Tom Reeves - VP Sales, Nina Patel - Rev Ops",nextStep:"",notes:"First design partner. 15 reps, 3-month pilot.",competitors:"None",products:"",hubspot:"",gong:"",pain:"Pipeline reviews were theater. Reps updated stages to look good, not reflect reality.",desiredState:"Deal health visible at a glance. Coaching built into the workflow.",likes:"Evidence hierarchy clicked immediately. Nina said it was the first tool that measured quality, not just completion.",risks:"",presales:"",bd:"",cldate:{call1:"1/20/26",call2:"2/5/26"},checklist:{call1:true,call2:true}},
+  {id:"meridian_group",name:"Meridian Group",erp:"HubSpot",bucket:"",stage:"Nurture",closedLost:null,cam:"",arr:"54000",targetClose:"",source:"Conference",contacts:"Rachel Green - SVP Revenue, Kyle Brennan - Sales Enablement",nextStep:"5/1 Rachel wants a case study from pilot before internal pitch.",notes:"Met at SaaStr. Great conversation about methodology fatigue.",competitors:"Clari, internal build",products:"",hubspot:"",gong:"",pain:"Adopted MEDDPICC last year. Reps fill it out but nobody reads it. $2M in slipped deals Q4.",desiredState:"Methodology that works without feeling like homework. Manager gets insight without asking for it.",likes:"Signals framework felt lighter than MEDDPICC. The idea that AI reads depth, not just completion.",risks:"Kyle worried about change management. They just rolled out MEDDPICC 8 months ago.",presales:"",bd:"",cldate:{call1:"2/20/26"},checklist:{call1:true}},
+  {id:"vertex_solutions",name:"Vertex Solutions",erp:"Salesforce",bucket:"",stage:"Closed Lost",closedLost:null,cam:"",arr:"60000",targetClose:"",source:"Outbound",contacts:"Mike Sullivan - VP Sales",nextStep:"",notes:"Liked the concept but locked into a 2-year Clari contract. Lost on timing.",competitors:"Clari (incumbent)",products:"",hubspot:"",gong:"",pain:"Clari shows what happened. Does not tell reps what to do next.",desiredState:"Predictive coaching, not retrospective dashboards.",likes:"Deal Rescue concept. The idea of detecting risk before the rep feels it.",risks:"Contract lock. No budget flexibility until renewal.",presales:"",bd:"",cldate:{call1:"1/10/26"},checklist:{call1:true}},
+  {id:"coastal_dynamics",name:"Coastal Dynamics",erp:"HubSpot",bucket:"",stage:"Nurture",closedLost:null,cam:"",arr:"42000",targetClose:"",source:"Inbound",contacts:"Lisa Hwang - Director of Sales",nextStep:"9/1 Lisa back from leave. Re-engage with Brightwave case study.",notes:"Lost on timing 6 months ago. Lisa reached back out after seeing us at SaaStr.",competitors:"None identified",products:"",hubspot:"",gong:"",pain:"No structured deal qualification process. Reps wing it.",desiredState:"Lightweight framework that does not feel like admin.",likes:"Fortune cookie concept made her laugh. She gets the brand.",risks:"Small team, 8 reps. Budget still tight.",presales:"",bd:"",cldate:{},checklist:{}},
+  {id:"ironclad_revenue",name:"Ironclad Revenue",erp:"HubSpot",bucket:"Commit",stage:"Hot",closedLost:null,cam:"",arr:"84000",targetClose:"",source:"Outbound",contacts:"Priya Nair - CRO, Seth Calloway - VP Sales Ops",nextStep:"3/22 Legal reviewing MSA. Seth confirmed exec sponsorship.",notes:"Priya came from Gong. Knows the space cold. Said Gong never solved the rep behavior problem.",competitors:"Gong",products:"",hubspot:"",gong:"",pain:"70 reps, 6 managers. Pipeline reviews eat 4 hours a week. Reps clone last quarter data and pray.",desiredState:"Self-updating pipeline. Managers coach instead of audit.",likes:"API Bridge concept. The idea that CRM updates as a side effect.",risks:"Legal slow. Seth warned procurement can take 6 weeks.",presales:"",bd:"",cldate:{call1:"2/10/26",call2:"3/3/26"},checklist:{call1:true,call2:true}},
+  {id:"bluepeak_analytics",name:"Bluepeak Analytics",erp:"Salesforce",bucket:"",stage:"Booked",closedLost:null,cam:"",arr:"55000",targetClose:"",source:"Event",contacts:"Jordan Fisk - VP Revenue",nextStep:"4/4 First discovery call. Jordan wants to understand scoring methodology.",notes:"Met at Pavilion CRO Summit. Never heard of MEDDPICC which is a green flag.",competitors:"None yet",products:"",hubspot:"",gong:"",pain:"Series B, building sales motion from scratch. No qualification framework, no forecast discipline.",desiredState:"Infrastructure that grows with the team.",likes:"Starting clean with the right system.",risks:"Early stage, budget not confirmed yet.",presales:"",bd:"",cldate:{},checklist:{}},
+  {id:"rally_cx",name:"Rally CX",erp:"HubSpot",bucket:"",stage:"Closed Lost",closedLost:null,cam:"",arr:"39000",targetClose:"",source:"Referral",contacts:"Marcus Webb - Director of Sales",nextStep:"",notes:"Lost to no decision. CFO froze spend in Q1.",competitors:"No decision",products:"",hubspot:"",gong:"",pain:"Reps sandbagging. Forecast swings 40% quarter to quarter.",desiredState:"Predictable number. Less time explaining misses.",likes:"Per-rep calibration. Marcus said that would have saved him two board conversations.",risks:"No path to budget until Q3 at earliest.",presales:"",bd:"",cldate:{call1:"1/28/26",call2:"2/18/26"},checklist:{call1:true,call2:true}},
+  {id:"lantern_ops",name:"Lantern Ops",erp:"Salesforce",bucket:"Upside",stage:"Passive",closedLost:null,cam:"",arr:"47000",targetClose:"",source:"Inbound",contacts:"Dani Reyes - Sales Enablement Lead, Omar Phelps - CRO",nextStep:"5/15 Omar wants to revisit after hiring two more AEs.",notes:"Good fit but growing into us. Team is 6 reps today, targeting 12 by summer.",competitors:"Internal spreadsheets",products:"",hubspot:"",gong:"",pain:"Enablement without visibility. Dani trains reps but has no way to see if it sticks.",desiredState:"Coaching that connects to actual deal outcomes.",likes:"Evidence hierarchy made Dani emotional. Said that is exactly what she has been trying to measure.",risks:"Timing. Too small today.",presales:"",bd:"",cldate:{call1:"3/8/26"},checklist:{call1:true}},
+  {id:"pinnacle_growth",name:"Pinnacle Growth Co",erp:"HubSpot",bucket:"",stage:"Reschedule",closedLost:null,cam:"",arr:"51000",targetClose:"",source:"Outbound",contacts:"Beth Morrow - VP Sales",nextStep:"5/12 Beth back from maternity leave. She asked us to hold until then.",notes:"Good discovery call in February. Real pain, real budget. Just terrible timing.",competitors:"None identified",products:"",hubspot:"",gong:"",pain:"No forecast process. Beth runs pipeline reviews from memory.",desiredState:"Something lightweight she can roll out without a big change management project.",likes:"The simplicity. Said it was the first tool that didn't feel like homework.",risks:"New baby. Timeline fully depends on when she's back and focused.",presales:"",bd:"",cldate:{call1:"2/6/26"},checklist:{call1:true}},
+  {id:"northstar_saas",name:"Northstar SaaS",erp:"Salesforce",bucket:"Upside",stage:"Hot",closedLost:null,cam:"",arr:"96000",targetClose:"",source:"Referral from Brightwave",contacts:"David Liu - CRO, Emma Walsh - VP Sales, Carlos Ruiz - Rev Ops Director",nextStep:"3/25 Final presentation to executive team. Need to show calibration roadmap.",notes:"Largest opportunity in pipeline. David trusts Tom at Brightwave.",competitors:"Gong Forecast, internal dashboards",products:"",hubspot:"",gong:"",pain:"$4.2M missed forecast last year. CRO does not trust any number his team gives him. Reps spend 30% of time on admin.",desiredState:"Forecast he can bet his job on. Rep workflow that feels like a tool, not a tax.",likes:"Per-rep calibration concept. David said that alone would change his forecast confidence. Evidence scoring hierarchy.",risks:"Large deal, long procurement. Legal review expected. Emma wants to pilot with one team first.",presales:"",bd:"",cldate:{call1:"2/28/26",call2:"3/10/26"},checklist:{call1:true,call2:true}}
+];
+
+const EMPTY = {name:"",erp:"",stage:"Nurture",closedLost:null,forecast:"",source:"",cam:"",presales:"",bd:"",contacts:"",
+  notes:"",photo:"",hubspotNum:"",camRewards:"",products:"",pricingSent:false,bucket:"Nurture",arr:"",targetClose:"",
+  activeTab:null,map:{info:{},items:[]},mapOpen:false,lastStep:"",nextStep:"",nextStepDate:"",criticalPath:"",risks:"",checklist:{},cldate:{},sectionOrder:null,domain:"",timeline:[],contactsList:[],meetingData:{}};
+
+// ── State ──
+let state = {ids:[], deals:{}};
+let openId = null;
+let activeMonthFilter = "";
+let saveTimer = null;
+
+// ── Boot unlock ──
+document.documentElement.classList.remove('booting');
+
+// ── Persistence (IndexedDB) ──
+const SK = "dealinsight_demo_v1";
+
+async function idbSet(key, value){
+  return new Promise((res, rej)=>{
+    const req = indexedDB.open("dealinsight_demo", 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore("kv");
+    req.onsuccess = e => {
+      const tx = e.target.result.transaction("kv","readwrite");
+      tx.objectStore("kv").put(value, key);
+      tx.oncomplete = ()=>res();
+      tx.onerror = ()=>rej(tx.error);
+    };
+    req.onerror = ()=>rej(req.error);
+  });
+}
+
+async function idbGet(key){
+  return new Promise((res, rej)=>{
+    const req = indexedDB.open("dealinsight_demo", 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore("kv");
+    req.onsuccess = e => {
+      const tx = e.target.result.transaction("kv","readonly");
+      const r = tx.objectStore("kv").get(key);
+      r.onsuccess = ()=>res(r.result);
+      r.onerror = ()=>rej(r.error);
+    };
+    req.onerror = ()=>rej(req.error);
+  });
+}
+
+async function idbDelete(key){
+  return new Promise((res, rej)=>{
+    const req = indexedDB.open("dealinsight_demo", 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore("kv");
+    req.onsuccess = e => {
+      const tx = e.target.result.transaction("kv","readwrite");
+      tx.objectStore("kv").delete(key);
+      tx.oncomplete = ()=>res();
+      tx.onerror = ()=>rej(tx.error);
+    };
+    req.onerror = ()=>rej(req.error);
+  });
+}
+
+async function savePhoto(id, dataUrl){
+  try{
+    if(dataUrl && dataUrl.length > 0){
+      await idbSet("photo_"+id, dataUrl);
+    } else {
+      await idbDelete("photo_"+id);
+    }
+  }catch(e){
+    console.warn("Photo save failed for", id, e);
+  }
+}
+
+async function loadPhotos(){
+  try{
+    const req = indexedDB.open("dealinsight_demo", 1);
+    await new Promise((res, rej)=>{
+      req.onupgradeneeded = e => e.target.result.createObjectStore("kv");
+      req.onsuccess = e => {
+        const tx = e.target.result.transaction("kv","readonly");
+        const r = tx.objectStore("kv").getAllKeys();
+        r.onsuccess = async ()=>{
+          const photoKeys = r.result.filter(k=>k.startsWith("photo_"));
+          for(const key of photoKeys){
+            const id = key.slice(6);
+            if(state.deals[id]){
+              const dataUrl = await idbGet(key);
+              if(dataUrl) state.deals[id].photo = dataUrl;
+            }
+          }
+          res();
+        };
+        r.onerror = ()=>rej(r.error);
+      };
+      req.onerror = ()=>rej(req.error);
+    });
+  }catch(e){
+    // no photos yet, fine
+  }
+}
+
+let _unsavedChanges = false;
+function saveState(){
+  _unsavedChanges = true;
+  clearTimeout(saveTimer);
+  const statusEl = document.getElementById("save-status");
+  if(statusEl){ statusEl.textContent="● Saving..."; statusEl.style.color="#f59e0b"; }
+  saveTimer = setTimeout(async ()=>{
+    // Strip photos out — save them separately in IndexedDB
+    const slim = JSON.parse(JSON.stringify(state));
+    const photoSaves = [];
+    Object.keys(slim.deals).forEach(id=>{
+      const photo = slim.deals[id].photo;
+      if(photo && photo !== "__photo_stripped__"){
+        photoSaves.push(savePhoto(id, photo));
+      }
+      delete slim.deals[id].photo;
+    });
+    try{
+      // Save main state to IndexedDB (no size limit)
+      await idbSet(SK, slim);
+    }catch(e){
+      if(statusEl){ statusEl.textContent="● Save failed - use Backup!"; statusEl.style.color="#ef4444"; return; }
+    }
+    await Promise.allSettled(photoSaves);
+    _unsavedChanges = false;
+    if(statusEl){
+      const now = new Date();
+      const t = now.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+      statusEl.textContent=`● Saved ${t}`; statusEl.style.color="#1D9E75";
+    }
+  }, 600);
+}
+
+let _loadedFromSave = false;
+
+async function loadState(){
+  try{
+    let loaded = await idbGet(SK);
+    if(loaded){
+      state = loaded;
+      _loadedFromSave = true;
+      migrateState();
+      await loadPhotos();
+      return;
+    }
+  }catch(e){
+    // IndexedDB unavailable, fall through to defaults
+  }
+  _loadedFromSave = false;
+  state.ids = DEFAULTS.map(d=>d.id);
+  DEFAULTS.forEach(d=>{ state.deals[d.id]={...EMPTY,...d}; });
+}
+
+function migrateState(){
+  // Legacy Implementation deals removed at source
+  // Deduplicate by name — if same name appears twice, keep the first occurrence
+  const seenNames = {};
+  state.ids = state.ids.filter(id => {
+    const d = state.deals[id];
+    if(!d) return false;
+    const key = (d.name||"").trim().toLowerCase();
+    if(!key) return true; // keep unnamed
+    if(seenNames[key]){ delete state.deals[id]; return false; }
+    seenNames[key] = true;
+    return true;
+  });
+
+  // ── Zombie stage killer (always run, not version-gated) ──
+  // Maps every dead stage name to its correct current stage.
+  // If a stage isn't in STAGES[], it gets remapped here.
+  const ZOMBIE_MAP = {
+    "Tepid":    "Nurture",
+    "Warm":     "Hot",
+    "Churned":  "Nurture",
+    "Winback":  "Nurture",
+    "Lost":     "Closed Lost",
+    "Closed":   "Closed Lost",
+    "Upcoming": "Booked"
+  };
+  let _renamedAny = false;
+  state.ids.forEach(id => {
+    const d = state.deals[id];
+    if(!d) return;
+    const remap = ZOMBIE_MAP[d.stage];
+    if(remap){ d.stage = remap; _renamedAny = true; }
+    // Catch anything else not in the valid list
+    if(!STAGES.includes(d.stage)){ d.stage = "Nurture"; _renamedAny = true; }
+  });
+  if(_renamedAny) saveState();
+
+  // Reset any deal that has AI saved as activeTab
+  state.ids.forEach(id => {
+    if(state.deals[id] && state.deals[id].activeTab === 'ai'){
+      state.deals[id].activeTab = null;
+    }
+  });
+
+
+
+  saveState();
+}
+
+// ── Week label ──
+function getWeekLabel(){
+  const d=new Date();
+  const mon=new Date(d); mon.setDate(d.getDate()-d.getDay()+1);
+  const fri=new Date(d); fri.setDate(d.getDate()-d.getDay()+5);
+  const o={month:"short",day:"numeric"};
+  return `${mon.toLocaleDateString("en-US",o)} – ${fri.toLocaleDateString("en-US",{...o,year:"numeric"})}`;
+}
+
+// ── Parse ARR ──
+function parseArr(s){ return parseFloat((s||"").replace(/[^0-9.]/g,""))||0; }
+function fmtRaw(s){ const n=parseArr(s); if(!n) return ""; return Math.round(n).toLocaleString("en-US"); }
+function fmtArr(s){ const n=parseArr(s); if(!n) return ""; return "$"+Math.round(n).toLocaleString("en-US"); }
+function fmt(n){ return n>0?`$${Math.round(n).toLocaleString()}`:"—"; }
+function pct(n,d){ return d>0?`${Math.round(n/d*100)}%`:"0%"; }
+
+// ── Update header ──
+function updateHeader(){
+  const totals={Closed:0,Commit:0,Upside:0,Stretch:0};
+  const MO_BAR = ["July 2025","August 2025","September 2025","October 2025","November 2025","December 2025","January 2026","February 2026","March 2026","April 2026","May 2026","June 2026","July 2026","August 2026","September 2026","October 2026","November 2026","December 2026"];
+  const NOW_M = "April 2026";
+  const nowIdxB = MO_BAR.indexOf(NOW_M);
+  const YTD_M = MO_BAR.slice(0, nowIdxB + 1);
+  const isYTDB = activeMonthFilter === "__ytd__";
+  const filterIdxB = MO_BAR.indexOf(activeMonthFilter);
+  const isPastB = !isYTDB && filterIdxB >= 0 && filterIdxB < nowIdxB;
+
+  state.ids.forEach(id=>{
+    const d=state.deals[id];
+    if(!d) return;
+    const arr=parseArr(d.arr);
+    if(!arr) return;
+    if(d.stage==="Won"){
+      if(isYTDB){
+        if(YTD_M.some(m=>matchesMonthFilter(d.targetClose,m))) totals.Closed+=arr;
+      } else if(activeMonthFilter){
+        if(matchesMonthFilter(d.targetClose, activeMonthFilter)) totals.Closed+=arr;
+      } else {
+        totals.Closed+=arr;
+      }
+    } else if(d.stage==="Closed Lost" || d.bucket==="Closed Lost" || d.closedLost){
+      // skip — closed lost regardless of how it's tagged
+    } else {
+      // Active deal — apply same month filter as deal list
+      if(activeMonthFilter && !isYTDB){
+        const tc = (d.targetClose||"").trim();
+        if(tc && !matchesMonthFilter(d.targetClose, activeMonthFilter)) return;
+      }
+      const cat = (d.stage==="Open") ? (d.forecast || "Not Forecasted") : null;
+      if(!cat) return;
+      if(cat==="Commit") totals.Commit+=arr;
+      else if(cat==="Upside") totals.Upside+=arr;
+      else totals.Stretch+=arr;
+    }
+  });
+  const total=totals.Closed+totals.Commit+totals.Upside+totals.Stretch;
+  let Q;
+  if(isYTDB){
+    Q = YTD_M.reduce((s,m)=>s+(getQuota(m)||0),0);
+  } else {
+    Q = getQuota(activeMonthFilter) || QUOTA;
+  }
+  const closed=Math.min(100,totals.Closed/Q*100);
+  const commit=Math.min(100-closed,totals.Commit/Q*100);
+  const upside=Math.min(100-closed-commit,totals.Upside/Q*100);
+  const stretch=Math.min(100-closed-commit-upside,totals.Stretch/Q*100);
+  const _bs = document.getElementById("bar-closed"); if(_bs) _bs.style.width=closed+"%";
+  const _bc = document.getElementById("bar-commit"); if(_bc) _bc.style.width=commit+"%";
+  const _bu = document.getElementById("bar-upside"); if(_bu) _bu.style.width=upside+"%";
+  const _bst = document.getElementById("bar-stretch"); if(_bst) _bst.style.width=stretch+"%";
+  // Update header boxes
+  const Q2 = Q > 0 ? Q : 1;
+  const boxData = [
+    {key:"closed", val:totals.Closed},
+    {key:"commit",  val:totals.Commit},
+    {key:"upside",  val:totals.Upside},
+    {key:"stretch", val:totals.Stretch}
+  ];
+  boxData.forEach(({key,val})=>{
+    const vEl = document.getElementById("hdrbox-"+key);
+    const pEl = document.getElementById("hdrbox-"+key+"-pct");
+    if(vEl) vEl.textContent = val>0 ? fmt(val) : "—";
+    if(pEl) pEl.textContent = val>0 ? Math.round(val/Q2*100)+"% to plan" : "0% to plan";
+  });
+
+
+  // ── Month summary bar ──
+  const summaryEl = document.getElementById("month-summary");
+  const MONTH_ORDER = ["July 2025","August 2025","September 2025","October 2025","November 2025","December 2025","January 2026","February 2026","March 2026","April 2026","May 2026","June 2026","July 2026","August 2026","September 2026","October 2026","November 2026","December 2026"];
+  const NOW_MONTH = "April 2026";
+  const isYTD = activeMonthFilter === "__ytd__";
+  const isSpecificMonth = activeMonthFilter && !isYTD;
+  const filterIdx = MONTH_ORDER.indexOf(activeMonthFilter);
+  const nowIdx = MONTH_ORDER.indexOf(NOW_MONTH);
+  const isPastMonth = isSpecificMonth && filterIdx >= 0 && filterIdx < nowIdx;
+  const FULL_YEAR_QUOTA = Object.values(QUOTA_BY_MONTH).reduce((a,b)=>a+b,0);
+
+  // YTD months: July 2025 through NOW_MONTH inclusive
+  const YTD_MONTHS = MONTH_ORDER.slice(0, nowIdx + 1);
+
+  const ms = {Closed:0, Commit:0, Upside:0, Stretch:0};
+  state.ids.forEach(id=>{
+    const d = state.deals[id];
+    if(!d) return;
+    const arr = parseArr(d.arr);
+    if(!arr) return;
+
+    // Determine if this deal is in scope for the selected filter
+    if(isYTD){
+      // YTD: Won filters by actual close date (targetClose); open deals always included
+      if(d.stage === "Won"){
+        if(!YTD_MONTHS.some(m => matchesMonthFilter(d.targetClose, m))) return;
+      }
+    } else if(isSpecificMonth){
+      // Specific month: all deals filter by targetClose (if set)
+      const tc = (d.targetClose||"").trim();
+      if(tc && !matchesMonthFilter(d.targetClose, activeMonthFilter)) return;
+    }
+
+    if(d.stage === "Won") { ms.Closed += arr; return; }
+    
+    if(d.stage === "Closed Lost" || d.bucket === "Closed Lost" || d.closedLost) return;
+
+    // Active deal — only Open feeds forecast buckets
+    if(d.stage !== "Open") return;
+    const cat = d.forecast || "Not Forecasted";
+    if(cat==="Commit")      ms.Commit += arr;
+    else if(cat==="Upside") ms.Upside += arr;
+    else                    ms.Stretch += arr;
+  });
+
+  // Quota for the selected period
+  let mq;
+  if(isYTD){
+    mq = YTD_MONTHS.reduce((sum, m) => sum + (getQuota(m)||0), 0);
+  } else if(isSpecificMonth){
+    mq = getQuota(activeMonthFilter);
+  } else {
+    mq = FULL_YEAR_QUOTA;
+  }
+
+  const pctTo = v => mq > 0 ? Math.round(v/mq*100)+"% to plan" : "—";
+  const fmtV = v => v > 0 ? "$"+Math.round(v).toLocaleString() : "—";
+  const fmtAbbrev = v => {
+    if(v <= 0) return "—";
+    if(v >= 1000000) return "$" + (v/1000000).toFixed(1).replace(/\.0$/,'') + "M";
+    if(v >= 1000) return "$" + Math.round(v/1000) + "K";
+    return "$" + Math.round(v);
+  };
+  let periodLabel = isYTD ? "YTD · JUL 2025 – MAR 2026" : isSpecificMonth ? activeMonthFilter : "Full Year";
+
+  const cols = [
+        { label:"NOT FORECASTED",   color:"#777",    val:ms.Stretch, pct:pctTo(ms.Closed + ms.Commit + ms.Upside + ms.Stretch) },
+        { label:"UPSIDE",          color:"#EF9F27", val:ms.Upside, pct:pctTo(ms.Closed + ms.Commit + ms.Upside) },
+        { label:"COMMIT",          color:"#7F77DD", val:ms.Commit, pct:pctTo(ms.Closed + ms.Commit) },
+        { label:"WON",             color:"#1D9E75", val:ms.Closed, pct:pctTo(ms.Closed) },
+      ];
+  const gridCols = "repeat(4,1fr)";
+
+  summaryEl.style.display = "block";
+  summaryEl.innerHTML = `
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <span style="font-size:14px;font-weight:700;color:#e0e0f0;">Stacey Shub</span>
+          <span style="font-size:12px;color:#9999BB;margin-left:8px;">Account Executive</span>
+        </div>
+        <div>
+          <span style="font-size:11px;font-weight:600;color:#9999BB;text-transform:uppercase;letter-spacing:1px;margin-right:6px;">Quota</span>
+          <span style="font-size:22px;font-weight:700;color:#e0e0f0;">$${fmtAbbrev(mq).replace('$','')}</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:${gridCols};gap:10px;">
+        ${cols.map(c=>{
+          return `<div style="background:#fff;border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:12px;font-weight:700;color:${c.color};text-transform:uppercase;letter-spacing:0.5px;">${c.label}</div>
+            <div style="font-size:20px;font-weight:700;color:${c.color};">${fmtAbbrev(c.val)}</div>
+            <div style="font-size:11px;font-weight:600;color:${c.color};">${c.pct}</div>
+          </div>`;
+        }).join("")}
+      </div>`;
+
+  updateAlerts();
+}
+
+// ── Render deals ──
+function sortedIds(){
+  const order=["Won","Open","Booked","Reschedule","Hot","Closed Lost","Passive","Nurture","Prospect"];
+  return [...state.ids].sort((a,b)=>{
+    const sa=state.deals[a]?.stage||"Nurture", sb=state.deals[b]?.stage||"Nurture";
+    const ia = order.indexOf(sa) === -1 ? 99 : order.indexOf(sa);
+    const ib = order.indexOf(sb) === -1 ? 99 : order.indexOf(sb);
+    if(ia !== ib) return ia - ib;
+    // Same stage — sort alphabetically by name
+    const na=(state.deals[a]?.name||"").toLowerCase();
+    const nb=(state.deals[b]?.name||"").toLowerCase();
+    return na < nb ? -1 : na > nb ? 1 : 0;
+  });
+}
+
+let wonMonthFilter = "";
+
+function setWonMonth(val){
+  wonMonthFilter = val;
+  renderDeals();
+}
+
+// Track which sections are collapsed - Won starts collapsed
+const collapsedSections = new Set(["Won","Booked","Reschedule","Hot","Nurture","Passive","Closed Lost"]);
+
+function toggleSection(stage){
+  if(collapsedSections.has(stage)) collapsedSections.delete(stage);
+  else collapsedSections.add(stage);
+  renderDeals();
+}
+
+function renderDeals(){
+  const list=document.getElementById("deals-list");
+  const scrollY = window.scrollY;
+  list.innerHTML="";
+  let lastStage = null;
+  let currentSectionCards = [];
+  let currentSectionHeader = null;
+
+  function flushSection(){
+    if(!currentSectionHeader) return;
+    list.appendChild(currentSectionHeader);
+    const stage = currentSectionHeader.dataset.stage;
+    if(!collapsedSections.has(stage)){
+      currentSectionCards.forEach(c => list.appendChild(c));
+    }
+    currentSectionCards = [];
+    currentSectionHeader = null;
+  }
+
+  sortedIds().forEach(id=>{
+    const d=state.deals[id];
+    if(!d) return;
+    const MONTH_ORDER2 = ["July 2025","August 2025","September 2025","October 2025","November 2025","December 2025","January 2026","February 2026","March 2026","April 2026","May 2026","June 2026","July 2026","August 2026","September 2026","October 2026","November 2026","December 2026"];
+    const NOW_MONTH2 = "April 2026";
+    const nowIdx2 = MONTH_ORDER2.indexOf(NOW_MONTH2);
+    const YTD_MONTHS2 = MONTH_ORDER2.slice(0, nowIdx2 + 1);
+
+    // When searching, bypass month filter and show all deals globally
+    if(activeSearch){
+      if(!matchesSearch(d)) return;
+    } else if(activeMonthFilter === "__ytd__"){
+      // YTD: show all won deals closed in YTD months, show all active/open deals
+    } else if(activeMonthFilter){
+      // Specific month — filter by relevant date field per stage
+      const alwaysCollapsed = ["Hot","Nurture","Reschedule","Booked","Passive","Closed Lost"];
+      if(alwaysCollapsed.includes(d.stage)){
+        // Show these but force collapsed
+        if(!collapsedSections.has(d.stage)) collapsedSections.add(d.stage);
+      } else {
+        const dateField = (d.targetClose||"").trim();
+        if(dateField && !matchesMonthFilter(dateField, activeMonthFilter)) return;
+      }
+    }
+
+    // Search filter (only runs when not in search mode - search handled above)
+    if(!activeSearch && !matchesSearch(d)) return;
+
+    // Bucket dividers
+    const ACTIVE_STAGES = ["Won","Open","Booked","Reschedule"];
+    const PROSPECT_STAGES = ["Hot","Closed Lost","Passive","Nurture"];
+    if(d.stage !== lastStage){
+      // Insert bucket header before first stage in each group
+      if(d.stage === "Won"){
+        flushSection();
+        const bh = document.createElement("div");
+        bh.style.cssText = "display:flex;align-items:center;gap:12px;margin:8px 0 10px;padding:0 2px";
+        bh.innerHTML = '<div style="flex:1;height:2px;background:#1B1F3B"></div><span style="font-size:13px;font-weight:700;letter-spacing:.12em;color:#1B1F3B">ACTIVE</span><div style="flex:1;height:2px;background:#1B1F3B"></div>';
+        list.appendChild(bh);
+      }
+      if(d.stage === "Hot"){
+        flushSection();
+        const bh = document.createElement("div");
+        bh.style.cssText = "display:flex;align-items:center;gap:12px;margin:24px 0 10px;padding:0 2px";
+        bh.innerHTML = '<div style="flex:1;height:2px;background:#1B1F3B"></div><span style="font-size:13px;font-weight:700;letter-spacing:.12em;color:#1B1F3B">PROSPECTS</span><div style="flex:1;height:2px;background:#1B1F3B"></div>';
+        list.appendChild(bh);
+      }
+      flushSection();
+      lastStage = d.stage;
+      const div = document.createElement("div");
+      div.dataset.stage = d.stage;
+      const meta = STAGE_META[d.stage]||STAGE_META["Nurture"];
+      const isCollapsed = collapsedSections.has(d.stage);
+      div.style.cssText = "display:flex;align-items:center;gap:10px;margin:14px 0 6px;padding:0 2px;cursor:pointer;user-select:none";
+      div.onclick = () => toggleSection(d.stage);
+      div.innerHTML = `<span style="font-size:11px;font-weight:700;letter-spacing:.06em;color:${meta.color};background:${meta.bg};padding:2px 8px;border-radius:4px">${d.stage.toUpperCase()}</span><div style="flex:1;height:1px;background:#e5e7eb"></div>`;
+      currentSectionHeader = div;
+    }
+
+    currentSectionCards.push(makeCard(id));
+  });
+
+  flushSection();
+
+  updateHeader();
+  if(activeSearch){
+    const visible = document.querySelectorAll('#deals-list .card').length;
+    const countEl = document.getElementById('search-count');
+    if(countEl) countEl.textContent = visible === 1 ? '1 match' : visible + ' matches';
+  } else {
+    const countEl = document.getElementById('search-count');
+    if(countEl) countEl.textContent = '';
+  }
+  window.scrollTo(0, scrollY);
+}
+
+function buildTabContainer(id){
+  const wrap = document.createElement('div');
+  wrap.className = 'bottom-tab-container';
+  wrap.id = 'tab-container-' + id;
+
+  const d = state.deals[id];
+  const activeTab = d.activeTab || null;
+
+  wrap.innerHTML = `
+    <div class="bottom-tab-bar">
+      <div class="bottom-tab${activeTab==='ai'?' active':''}" id="tab-btn-ai-${id}"
+        data-tab="ai" onclick="switchTab('${id}','ai')">✦ AI</div>
+    </div>
+    <div class="bottom-tab-panel${activeTab==='ai'?' active':''}" id="tab-panel-ai-${id}" data-theme="ai" style="padding:0 0 2px"></div>`;
+
+  setTimeout(()=>{
+    const histPanel = document.getElementById('tab-panel-history-'+id);
+    if(histPanel) histPanel.appendChild(buildHistory(id));
+    const aiPanel = document.getElementById('tab-panel-ai-'+id);
+    if(aiPanel) aiPanel.appendChild(buildAI(id));
+  }, 0);
+
+  return wrap;
+}
+
+function switchTab(id, tab){
+  const d = state.deals[id];
+  // Toggle: clicking the active tab closes all tabs
+  const isClosing = d.activeTab === tab;
+  const newTab = isClosing ? null : tab;
+  // Don't persist AI tab as default
+  if(newTab !== 'ai') d.activeTab = newTab;
+  saveState();
+  // Lazy-create history panel if it doesn't exist yet (pre-rendered cards)
+  if(newTab === 'history' && !document.getElementById('tab-panel-history-'+id)){
+    const container = document.getElementById('tab-container-'+id);
+    if(container){
+      const panel = document.createElement('div');
+      panel.className = 'bottom-tab-panel active';
+      panel.id = 'tab-panel-history-'+id;
+      panel.dataset.theme = 'history';
+      panel.style.cssText = 'padding:0 0 2px';
+      panel.appendChild(buildHistory(id));
+      container.appendChild(panel);
+    }
+  }
+  // Lazy-create AI panel if it doesn't exist yet (pre-rendered cards)
+  if(newTab === 'ai' && !document.getElementById('tab-panel-ai-'+id)){
+    const container = document.getElementById('tab-container-'+id);
+    if(container){
+      const panel = document.createElement('div');
+      panel.className = 'bottom-tab-panel active';
+      panel.id = 'tab-panel-ai-'+id;
+      panel.dataset.theme = 'ai';
+      panel.style.cssText = 'padding:0 0 2px';
+      panel.appendChild(buildAI(id));
+      container.appendChild(panel);
+    }
+  }
+  ['history','ai'].forEach(t => {
+    const btn = document.getElementById('tab-btn-' + t + '-' + id);
+    const panel = document.getElementById('tab-panel-' + t + '-' + id);
+    if(btn) btn.classList.toggle('active', t===newTab);
+    if(panel) panel.classList.toggle('active', t===newTab);
+  });
+}
+
+
+// ── HISTORY ───────────────────────────────────────────────────────────
+function logActivity(id, text, skipSave){
+  if(!id || !text) return;
+  const d = state.deals[id];
+  if(!d) return;
+  if(!d.history) d.history = [];
+  const ts = new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+  d.history.unshift({ts, text});
+  if(!skipSave) saveState();
+}
+
+function buildHistory(id){
+  const d = state.deals[id];
+  const entries = d.history || [];
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'padding:0;';
+
+  const div = document.createElement('div');
+  div.className = 'map-section';
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-2) 0;min-height:36px">
+      <div style="font-size:var(--text-xs);font-weight:700;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase">LAST STEP <span style="font-size:10px;font-weight:400;color:#9ca3af;letter-spacing:.5px">Activity Log</span></div>
+      <span style="font-size:10px;font-weight:700;color:#374151">${entries.length} ${entries.length===1?'entry':'entries'}</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <textarea id="hist-input-${id}" rows="2" placeholder="Add a note or call summary…"
+        style="flex:1;font-size:13px;font-family:inherit;padding:8px 10px;border:1px solid var(--border-mid);border-radius:6px;resize:vertical;color:var(--text-secondary);line-height:1.5;background:var(--surface)" onclick="event.stopPropagation()"></textarea>
+      <button onclick="event.stopPropagation();addHistoryEntry('${id}')"
+        style="align-self:flex-start;padding:8px 14px;background:var(--hist-color);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;letter-spacing:.05em">+ LOG</button>
+    </div>
+    <div id="hist-list-${id}" style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto"></div>`;
+
+  wrap.appendChild(div);
+
+  setTimeout(() => {
+    const list = document.getElementById('hist-list-' + id);
+    if(!list) return;
+    if(!entries.length){
+      list.innerHTML = '<div style="color:var(--text-xmuted);font-size:12px;font-style:italic;padding:10px 0">No activity yet — stage changes, next step updates, and manual notes will appear here.</div>';
+    } else {
+      entries.forEach((e, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--hist-color);border-radius:0 6px 6px 0;';
+      const textDiv = document.createElement('div');
+      textDiv.style.cssText = 'flex:1;min-width:0';
+      const tsText = e.ts || '';
+      textDiv.innerHTML = `<div style="font-size:10px;color:var(--hist-color);font-weight:700;margin-bottom:4px;letter-spacing:.06em;text-transform:uppercase">${tsText}</div>`;
+      const textContent = document.createElement('div');
+      textContent.style.cssText = 'font-size:13px;color:var(--text-primary);line-height:1.55;white-space:pre-wrap;cursor:pointer;';
+      textContent.title = 'Double-click to edit';
+      textContent.textContent = e.text;
+      textContent.ondblclick = (ev) => {
+        ev.stopPropagation();
+        const ta = document.createElement('textarea');
+        ta.value = e.text;
+        ta.style.cssText = 'width:100%;font-size:13px;font-family:inherit;padding:5px 8px;border:1.5px solid var(--border-mid);border-radius:5px;resize:vertical;line-height:1.5;color:var(--text-primary);min-height:60px;box-sizing:border-box;background:var(--surface);outline:none';
+        ta.onclick = ev2 => ev2.stopPropagation();
+        ta.onkeydown = ev2 => {
+          if(ev2.key==='Escape'){ textContent.style.display=''; ta.replaceWith(textContent); }
+          if(ev2.key==='Enter' && ev2.metaKey){ saveEdit(); }
+        };
+        const saveEdit = () => {
+          const newText = ta.value.trim();
+          if(newText && newText !== e.text){
+            state.deals[id].history[i].text = newText;
+            saveState();
+          }
+          const panel = document.getElementById('tab-panel-history-'+id);
+          if(panel){ panel.innerHTML=''; panel.appendChild(buildHistory(id)); }
+        };
+        ta.onblur = saveEdit;
+        textContent.style.display = 'none';
+        textContent.after(ta);
+        ta.focus();
+      };
+      textDiv.appendChild(textContent);
+      row.appendChild(textDiv);
+      const delBtn = document.createElement('button');
+      delBtn.onclick = (ev) => { ev.stopPropagation(); deleteHistoryEntry(id, i); };
+      delBtn.style.cssText = 'flex-shrink:0;background:none;border:none;cursor:pointer;color:#d1d5db;font-size:16px;padding:0;line-height:1;margin-top:1px;transition:color .12s';
+      delBtn.onmouseover = () => delBtn.style.color = '#ef4444';
+      delBtn.onmouseout = () => delBtn.style.color = '#d1d5db';
+      delBtn.title = 'Delete';
+      delBtn.textContent = '×';
+      row.appendChild(delBtn);
+      list.appendChild(row);
+    });
+  }
+  }, 0);
+
+  return wrap;
+}
+
+function addHistoryEntry(id){
+  const ta = document.getElementById('hist-input-'+id);
+  if(!ta) return;
+  const text = ta.value.trim();
+  if(!text) return;
+  logActivity(id, text);
+  ta.value = '';
+  const panel = document.getElementById('tab-panel-history-'+id);
+  if(panel){ panel.innerHTML=''; panel.appendChild(buildHistory(id)); }
+}
+
+function deleteHistoryEntry(id, index){
+  const d = state.deals[id];
+  if(!d || !d.history) return;
+  d.history.splice(index, 1);
+  saveState();
+  const panel = document.getElementById('tab-panel-history-'+id);
+  if(panel){ panel.innerHTML=''; panel.appendChild(buildHistory(id)); }
+}
+
+// ── AI ────────────────────────────────────────────────────────────────
+function getAIKey(){ return localStorage.getItem('dealinsight_ai_key') || ''; }
+function saveAIKey(k){ localStorage.setItem('dealinsight_ai_key', k.trim()); }
+
+function getDealContext(id){
+  const d = state.deals[id];
+  return `
+COMPANY: ${d.name}
+ERP: ${cleanVal(d.erp)}
+STAGE: ${d.stage}
+ARR: $${d.arr || ''}
+PRODUCTS: ${d.products || ''}
+CONTACTS: ${d.contacts || ''}
+CAM: ${cleanVal(d.cam)}
+TARGET CLOSE: ${d.targetClose || ''}
+
+PAIN / SITUATION:
+${d.pain || ''}
+
+DESIRED STATE:
+${d.desiredState || ''}
+
+WHAT RESONATED IN DEMO:
+${d.likes || ''}
+
+RISKS:
+${d.risks || ''}
+
+NEXT STEP:
+${d.nextStep || ''}
+
+NOTES:
+${d.notes || ''}
+`.trim();
+}
+
+async function callClaude(systemPrompt, userMessage, key){
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1500,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }]
+    })
+  });
+  if(!resp.ok){
+    const err = await resp.json().catch(()=>({error:{message:'API error'}}));
+    throw new Error(err.error?.message || 'API error');
+  }
+  const data = await resp.json();
+  return data.content.map(b => b.text || '').join('');
+}
+
+async function runAI(id, mode){
+  const key = getAIKey();
+  if(!key){ alert('Add your Anthropic API key in the AI tab first.'); return; }
+
+  const outputEl = document.getElementById('ai-output-'+id);
+  const outputTitle = document.getElementById('ai-output-title-'+id);
+  const spinner = document.getElementById('ai-spinner-'+id);
+  const ctx = getDealContext(id);
+  const d = state.deals[id];
+
+  outputEl.classList.remove('visible');
+  if(spinner) spinner.style.display = 'inline-block';
+
+  try {
+    let result = '';
+    const systemBase = `You are an expert B2B sales assistant helping analyze deals using the Signals framework. Score deals on six signals: Pain, Value, People, Process, Competition, Momentum. Be concise, sharp, and sales-savvy. Use the deal context provided.`;
+
+    if(mode === 'followup'){
+      outputTitle.textContent = 'Follow-Up Email';
+      result = await callClaude(systemBase,
+        `Write a concise, professional follow-up email for this deal. Sound like a real person, not corporate. Reference specifics from the deal context. Include a clear next step.\n\nDEAL CONTEXT:\n${ctx}`, key);
+
+    } else if(mode === 'proposal'){
+      outputTitle.textContent = 'Proposal Email';
+      result = await callClaude(systemBase,
+        `Write a proposal email for this deal including the products being proposed and the business case. Reference their specific pain points and desired outcomes. Mention ARR pricing context if available.\n\nDEAL CONTEXT:\n${ctx}`, key);
+
+    } else if(mode === 'signals'){
+      outputTitle.textContent = 'Signals Analysis';
+      result = await callClaude(systemBase,
+        `Analyze this deal using the 4-Signal framework. For each signal (The Pain, The Edge, The People, The Process), assess the evidence quality (Rep Assertion, Prospect Quote, Quantified Consequence, or Dollar Impact), explain what we know, what's missing, and what the rep should do next to strengthen that signal.\n\nDEAL CONTEXT:\n${ctx}`, key);
+
+    } else if(mode === 'gong'){
+      const transcript = document.getElementById('ai-transcript-'+id)?.value?.trim();
+      if(!transcript){ alert('Paste a Gong transcript first.'); if(spinner) spinner.style.display='none'; return; }
+      outputTitle.textContent = 'Gong Call Summary';
+      result = await callClaude(systemBase,
+        `Summarize this Gong call transcript for a ${d.name} deal. Extract: key pain points mentioned, objections raised, what resonated, next steps agreed, and suggested Signals updates (The Pain, The Edge, The People, The Process). Be sharp and actionable.\n\nDEAL CONTEXT:\n${ctx}\n\nTRANSCRIPT:\n${transcript}`, key);
+
+    } else if(mode === 'objections'){
+      outputTitle.textContent = 'Objection Responses';
+      result = await callClaude(systemBase,
+        `Based on the risks and deal context, write 3-5 likely objections the rep will face and sharp, confident responses to each. Make them specific to this deal, not generic.\n\nDEAL CONTEXT:\n${ctx}`, key);
+    }
+
+    outputEl.querySelector('.ai-output-text').textContent = result;
+    outputEl.classList.add('visible');
+    logActivity(id, `AI: ${outputTitle.textContent} generated`);
+  } catch(e){
+    outputEl.querySelector('.ai-output-text').textContent = '⚠️ Error: ' + e.message;
+    outputEl.classList.add('visible');
+  }
+  if(spinner) spinner.style.display = 'none';
+}
+
+function buildAI(id){
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-section';
+  const hasKey = !!getAIKey();
+
+  wrap.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-2) 0;min-height:36px">
+      <div style="font-size:var(--text-xs);font-weight:700;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase">AI <span style="font-size:10px;font-weight:400;color:#9ca3af;letter-spacing:.5px">Assistant</span></div>
+    </div>
+    <div class="ai-key-row" id="ai-key-row-${id}" style="${hasKey ? 'display:none' : ''}">
+      <span style="font-size:10px;font-weight:700;color:var(--text-muted);white-space:nowrap">API KEY</span>
+      <input class="ai-key-input" id="ai-key-input-${id}" type="password"
+        placeholder="sk-ant-..." value="${getAIKey()}"
+        onchange="saveAIKey(this.value)" />
+      <button class="ai-key-save" onclick="saveAIKey(document.getElementById('ai-key-input-${id}').value);document.getElementById('ai-key-row-${id}').style.display='none';document.getElementById('ai-key-set-${id}').style.display='flex';this.textContent='✓ Saved';setTimeout(()=>this.textContent='Save',1200)">Save</button>
+    </div>
+    <div id="ai-key-set-${id}" style="${hasKey ? 'display:flex' : 'display:none'};align-items:center;gap:8px;margin-bottom:10px;padding:6px 10px;background:var(--muted);border:1px solid var(--border-mid);border-radius:6px;font-size:11px">
+      <span style="color:var(--ai-color);font-weight:700">✓ API KEY SET</span>
+      <button onclick="document.getElementById('ai-key-row-${id}').style.display='flex';document.getElementById('ai-key-set-${id}').style.display='none'" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;padding:0">change</button>
+    </div>
+
+    <div style="margin-bottom:8px">
+      <div style="font-size:10px;font-weight:800;color:#374151;letter-spacing:.07em;margin-bottom:6px">GENERATE</div>
+      <button class="ai-btn ai-btn-primary" onclick="runAI('${id}','followup')">✉ Follow-Up Email</button>
+      <button class="ai-btn ai-btn-primary" onclick="runAI('${id}','proposal')">📋 Proposal Email</button>
+      <button class="ai-btn ai-btn-primary" onclick="runAI('${id}','signals')">🎯 Signals Analysis</button>
+      <button class="ai-btn ai-btn-secondary" onclick="runAI('${id}','objections')">🛡 Objection Responses</button>
+    </div>
+
+    <div style="margin-bottom:8px">
+      <div style="font-size:10px;font-weight:800;color:#374151;letter-spacing:.07em;margin-bottom:4px">GONG TRANSCRIPT <span style="font-weight:400;color:#9ca3af">— paste below, then click Summarize</span></div>
+      <textarea class="ai-transcript" id="ai-transcript-${id}" placeholder="Paste Gong transcript here..."></textarea>
+      <button class="ai-btn ai-btn-secondary" style="margin-top:4px" onclick="runAI('${id}','gong')">🎙 Summarize Call</button>
+    </div>
+
+    <span class="ai-spinner" id="ai-spinner-${id}" style="display:none"></span>
+
+    <div class="ai-output" id="ai-output-${id}">
+      <div class="ai-output-header">
+        <span class="ai-output-title" id="ai-output-title-${id}"></span>
+        <button class="ai-copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('ai-output-${id}').querySelector('.ai-output-text').textContent).then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button>
+      </div>
+      <div class="ai-output-text" style="white-space:pre-wrap;font-size:12px;line-height:1.7;color:var(--text-primary)"></div>
+    </div>`;
+
+  return wrap;
+}
+
+
+// ── Activity Timeline ─────────────────────────────────────────────────
+function buildActivityTimeline(id, d){
+  if(!d.timeline) d.timeline = [];
+
+  // Migrate legacy lastStep into timeline if timeline is empty
+  if(!d.timeline.length && d.lastStep && d.lastStep.trim()){
+    d.timeline.push({ts: 'Legacy', text: d.lastStep.trim(), type:'completed'});
+  }
+
+  const entries = d.timeline || [];
+  const completed = entries.filter(e => e.type === 'completed');
+  const nextStep = d.nextStep || '';
+  const nextDate = d.nextStepDate || '';
+
+  const inputS = 'font-size:13px;font-family:inherit;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;color:#374151;box-sizing:border-box';
+  const dateS = inputS + ';width:140px;flex-shrink:0;height:58px';
+  const textS = inputS + ';flex:1;resize:vertical;line-height:1.5';
+
+  let html = '<div style="margin-bottom:4px">';
+  html += '<div class="field-label" style="margin:0 0 8px">Next Step</div>';
+
+  // Next Step - dashed purple card, date and Done inline
+  html += `<div id="ns-card-${id}" style="border-left:3.5px dashed #7F77DD;border-radius:0 6px 6px 0;padding:10px 12px;background:#ffffff;border:1.5px dashed #d1d5db;border-left:3.5px dashed #7F77DD;margin-bottom:4px">`;
+  html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">`;
+  html += `<span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;padding:3px 6px;border-radius:4px;transition:background .12s;min-height:28px" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background=''" onclick="event.stopPropagation();var inp=document.getElementById('ns-date-${id}');if(inp)try{inp.showPicker()}catch(e){inp.click()}">`;
+  html += `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+  html += `<span style="font-size:12px;color:${nextDate?'#374151':'#9ca3af'};font-weight:${nextDate?'600':'400'}">${nextDate ? new Date(nextDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'Date'}</span>`;
+  html += `<input type="date" id="ns-date-${id}" value="${esc(nextDate)}" onchange="event.stopPropagation();upd('${id}','nextStepDate',this.value);refreshCard('${id}')" onclick="event.stopPropagation()" style="position:absolute;left:-9999px;width:0;height:0;opacity:0">`;
+  html += `</span>`;
+  html += `<div class="cb-wrap" onclick="event.stopPropagation();completeNextStep('${id}')"><div class="cb-box cb-purple" id="cb-${id}-ns-done"></div><span class="cb-label">Done</span></div>`;
+  html += `</div>`;
+  html += `<textarea rows="2" oninput="upd('${id}','nextStep',this.value)" onclick="event.stopPropagation()" placeholder="Next step..." style="${textS};width:100%;box-sizing:border-box">${esc(nextStep)}</textarea>`;
+  html += `</div>`;
+
+  // Last Step entries - solid amber card, date inline above text
+  if(completed.length){
+    html += '<div class="field-label" style="margin:8px 0 8px">History</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">';
+    completed.slice().reverse().forEach((e, ri) => {
+      const i = completed.length - 1 - ri;
+      html += `<div style="position:relative;border-left:3.5px solid #7F77DD;border-radius:0 6px 6px 0;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-left:3.5px solid #7F77DD" onmouseenter="var x=this.querySelector('.hist-x');if(x)x.style.opacity='1'" onmouseleave="var x=this.querySelector('.hist-x');if(x)x.style.opacity='0'">`;
+      html += `<div style="font-size:12px;color:#374151;font-weight:700;margin-bottom:4px;letter-spacing:.04em">${esc(e.ts||'')}</div>`;
+      html += `<div id="hist-text-${id}-${i}" ondblclick="editHistoryEntry(event,'${id}',${i})" style="font-size:13px;color:#374151;line-height:1.5;white-space:pre-wrap;cursor:text;padding:1px 2px" title="Double-click to edit">${esc(e.text||'')}</div>`;
+      html += `<button class="hist-x" onclick="event.stopPropagation();deleteTimelineEntry('${id}',${i})" style="position:absolute;top:4px;right:6px;background:none;border:none;cursor:pointer;color:#d1d5db;font-size:14px;padding:0;line-height:1;opacity:0;transition:opacity .15s" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'" title="Delete">x</button>`;
+      html += `</div>`;
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function completeNextStep(id){
+  const d = state.deals[id];
+  if(!d || !d.nextStep || !d.nextStep.trim()) return;
+  if(!d.timeline) d.timeline = [];
+  const now = new Date();
+  const todayFmt = (now.getMonth()+1)+'/'+now.getDate()+'/'+now.getFullYear();
+  let rawDate = d.nextStepDate || '';
+  let ts = todayFmt;
+  if(rawDate){
+    // Convert YYYY-MM-DD to M/D/YYYY
+    const parts = rawDate.split('-');
+    if(parts.length === 3) ts = parseInt(parts[1])+'/'+parseInt(parts[2])+'/'+parts[0];
+    else ts = rawDate;
+  }
+  d.timeline.push({ts: ts, text: d.nextStep.trim(), type:'completed'});
+  d.nextStep = '';
+  d.nextStepDate = '';
+  saveState();
+  refreshCard(id);
+}
+
+function addTimelineEntry(id){
+  const dateEl = document.getElementById('tl-date-'+id);
+  const textEl = document.getElementById('tl-text-'+id);
+  if(!textEl) return;
+  const text = textEl.value.trim();
+  if(!text) return;
+  const d = state.deals[id];
+  if(!d.timeline) d.timeline = [];
+  const dateVal = dateEl ? dateEl.value : '';
+  const now = new Date();
+  const ts = dateVal || ((now.getMonth()+1)+'/'+now.getDate()+'/'+now.getFullYear());
+  d.timeline.push({ts: ts, text: text, type:'completed'});
+  saveState();
+  refreshCard(id);
+}
+
+function editHistoryEntry(event, id, index){
+  event.stopPropagation();
+  const div = document.getElementById('hist-text-'+id+'-'+index);
+  if(!div || div.querySelector('textarea')) return;
+  const current = div.textContent;
+  const ta = document.createElement('textarea');
+  ta.value = current;
+  ta.style.cssText = 'width:100%;font-size:13px;font-family:inherit;color:#374151;line-height:1.5;border:1px solid #EF9F27;border-radius:4px;padding:4px 6px;resize:vertical;box-sizing:border-box;outline:none;min-height:48px';
+  ta.onclick = e => e.stopPropagation();
+  let saved = false;
+  const save = () => {
+    if(saved) return;
+    saved = true;
+    const newText = ta.value.trim();
+    const d = state.deals[id];
+    const completed = (d.timeline||[]).filter(e => e.type==='completed');
+    const entry = completed[index];
+    if(entry && newText !== current){
+      entry.text = newText;
+      saveState();
+    }
+    refreshCard(id);
+  };
+  ta.addEventListener('blur', save);
+  ta.addEventListener('keydown', e => {
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); e.stopPropagation(); save(); }
+    if(e.key==='Escape'){ saved=true; e.stopPropagation(); refreshCard(id); }
+  });
+  div.innerHTML = '';
+  div.appendChild(ta);
+  ta.focus();
+}
+
+function deleteTimelineEntry(id, index){
+  const d = state.deals[id];
+  if(!d || !d.timeline) return;
+  const completed = d.timeline.filter(e => e.type === 'completed');
+  if(index < 0 || index >= completed.length) return;
+  const actualIndex = d.timeline.indexOf(completed[index]);
+  if(actualIndex >= 0) d.timeline.splice(actualIndex, 1);
+  saveState();
+  refreshCard(id);
+}
+
+// ── Structured Contacts ───────────────────────────────────────────────
+function migrateContacts(d){
+  if(d.contactsList && d.contactsList.length) return;
+  d.contactsList = [];
+  if(d.contacts && d.contacts.trim()){
+    d.contacts.split(/[,\n]+/).forEach(c => {
+      c = c.trim();
+      if(!c) return;
+      const dash = c.indexOf(' - ');
+      if(dash > 0){
+        d.contactsList.push({name: c.substring(0, dash).trim(), title: c.substring(dash+3).trim(), notes: ''});
+      } else {
+        d.contactsList.push({name: c, title: '', notes: ''});
+      }
+    });
+  }
+}
+
+function buildContactsSection(id, d){
+  migrateContacts(d);
+  const contacts = d.contactsList || [];
+
+  let html = '<div style="margin-bottom:4px">';
+
+  // Header row - label only, no add button
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+  html += '<div class="field-label" style="margin:0">Contacts</div>';
+  html += '</div>';
+
+  // Always ensure one blank at the end
+  if(!contacts.length || contacts[contacts.length-1].name || contacts[contacts.length-1].title){
+    contacts.push({name:'', title:'', notes:''});
+  }
+
+  // Contact cards
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  contacts.forEach((c, i) => {
+    const isEmpty = !c.name && !c.title && !c.notes;
+    const bg = isEmpty ? '#ffffff' : '#f9fafb';
+    const borderStyle = isEmpty ? 'border:1.5px dashed #F2BACC;border-left:3.5px dashed #F2BACC' : 'border:1px solid #e5e7eb;border-left:3.5px solid #F2BACC';
+    html += `<div style="position:relative;padding:10px 12px;background:${bg};${borderStyle};border-radius:0 6px 6px 0">`;
+    if(!isEmpty){
+      html += `<button onclick="event.stopPropagation();removeContact('${id}',${i})" style="position:absolute;top:6px;right:6px;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;padding:2px 8px;line-height:1.4;border-radius:4px;font-family:inherit;transition:all .15s" onmouseover="this.style.color='#ef4444';this.style.borderColor='#fca5a5';this.style.background='#fef2f2'" onmouseout="this.style.color='#9ca3af';this.style.borderColor='#e5e7eb';this.style.background='#f3f4f6'" title="Remove contact">✕</button>`;
+    }
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">`;
+    html += `<div><input type="text" value="${esc(c.name||'')}" oninput="event.stopPropagation();updContactAuto('${id}',${i},'name',this.value)" onclick="event.stopPropagation()" style="width:100%;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;font-family:inherit;color:#374151;box-sizing:border-box" placeholder="Name"></div>`;
+    html += `<div><input type="text" value="${esc(c.title||'')}" oninput="event.stopPropagation();updContactAuto('${id}',${i},'title',this.value)" onclick="event.stopPropagation()" style="width:100%;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;font-family:inherit;color:#374151;box-sizing:border-box" placeholder="Title"></div>`;
+    html += `<div style="grid-column:span 2"><textarea rows="4" oninput="event.stopPropagation();updContactAuto('${id}',${i},'notes',this.value)" onclick="event.stopPropagation()" style="width:100%;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;font-family:inherit;color:#374151;resize:vertical;box-sizing:border-box" placeholder="Contact Notes">${esc(c.notes||'')}</textarea></div>`;
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+function addContact(id){
+  const d = state.deals[id];
+  if(!d.contactsList) d.contactsList = [];
+  d.contactsList.push({name:'', title:'', notes:''});
+  saveState();
+  refreshCard(id);
+}
+
+function removeContact(id, index){
+  const d = state.deals[id];
+  if(!d || !d.contactsList) return;
+  d.contactsList.splice(index, 1);
+  saveState();
+  refreshCard(id);
+}
+
+function updContact(id, index, field, value){
+  const d = state.deals[id];
+  if(!d || !d.contactsList || !d.contactsList[index]) return;
+  d.contactsList[index][field] = value;
+  // Also update legacy contacts string for CSV export
+  d.contacts = d.contactsList.map(c => c.name + (c.title ? ' - ' + c.title : '')).join(', ');
+  saveState();
+}
+
+function updContactAuto(id, index, field, value){
+  const d = state.deals[id];
+  if(!d) return;
+  if(!d.contactsList) d.contactsList = [];
+  // Ensure the index exists
+  while(d.contactsList.length <= index) d.contactsList.push({name:'', title:'', notes:''});
+  d.contactsList[index][field] = value;
+  d.contacts = d.contactsList.filter(c=>c.name||c.title).map(c => c.name + (c.title ? ' - ' + c.title : '')).join(', ');
+  saveState();
+  // If typing in the last contact, add a new blank and refresh
+  const isLast = index === d.contactsList.length - 1;
+  const hasContent = d.contactsList[index].name || d.contactsList[index].title;
+  if(isLast && hasContent){
+    d.contactsList.push({name:'', title:'', notes:''});
+    saveState();
+    refreshCard(id);
+  }
+}
+
+// ── Refresh card helper ───────────────────────────────────────────────
+function refreshCard(id){
+  const card = document.getElementById('card-'+id);
+  if(!card) return;
+  const wasOpen = card.classList.contains('open');
+  const parent = card.parentNode;
+  const next = card.nextSibling;
+  const newCard = makeCard(id);
+  parent.replaceChild(newCard, card);
+  if(wasOpen) toggleCard(id);
+}
+
+function makeCard(id){
+  const d=state.deals[id];
+  const m=STAGE_META[d.stage]||STAGE_META["Nurture"];
+  const fm = d.stage==="Open" ? (d.forecast ? FORECAST_META[d.forecast] : null) : null;
+  const doneCount=CHECKLIST.filter(c=>d.checklist?.[c.id]).length;
+  const chPct=Math.round(doneCount/CHECKLIST.length*100);
+  const hasNarrative=d.lastStep||d.nextStep||d.criticalPath;
+  const card=document.createElement("div");
+  card.className="card"; card.dataset.id=id;
+  card.id="card-"+id;
+  card.style.borderLeftWidth="3.5px";
+  card.style.borderLeftStyle="solid";
+  card.style.borderLeftColor=m.dot;
+  card.dataset.borderColor=m.dot;
+  card.dataset.cardBg=m.cardBg;
+
+  // Header
+  const hdr=document.createElement("div");
+  hdr.className="card-header";
+  hdr.onclick=()=>toggleCard(id);
+  card.onmouseenter=function(){ const h=this.querySelector('.card-header'); if(h && !this.classList.contains('open')) h.style.background=this.dataset.cardBg; };
+  card.onmouseleave=function(){ const h=this.querySelector('.card-header'); if(h && !this.classList.contains('open')) h.style.background=''; };
+
+  const isClosed = d.stage==="Won";
+  // For Booked, derive meeting month from firstMeeting or call1 date
+  let upcomingMtgMonth = "";
+  if(d.stage === "Booked"){
+    upcomingMtgMonth = (d.firstMeeting||"").trim();
+    if(!upcomingMtgMonth && d.cldate?.call1){
+      const MNAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const parts = d.cldate.call1.split("/");
+      if(parts.length >= 2){
+        const mi = parseInt(parts[0],10) - 1;
+        const yr = parts.length >= 3 ? (parts[2].length === 2 ? "20"+parts[2] : parts[2]) : "2026";
+        if(mi >= 0 && mi < 12) upcomingMtgMonth = MNAMES[mi] + " " + yr;
+      }
+    }
+  }
+  const nextText = isClosed
+    ? (d.targetClose
+        ? `<span class="card-header-month" style="color:#6b7280;font-weight:600">${d.targetClose}</span>`
+        : ``)
+    : d.stage==="Open" && d.targetClose
+        ? `<span class="card-header-month" style="color:#6b7280">${d.targetClose}</span>`
+    : ``;
+
+  hdr.innerHTML=`
+    <div class="dot" style="background:${m.dot}"></div>
+    <div style="flex:1;min-width:0">
+      <div class="card-name" id="card-name-${id}">${d.name||"Unnamed Account"}</div>
+      <div class="card-sub" id="card-sub-${id}">
+        ${cleanVal(d.erp)?`<span style="color:#4b5563">${cleanVal(d.erp)}</span>`:""}
+        ${cleanVal(d.cam)?`<span>${cleanVal(d.cam)}</span>`:""}
+
+        ${nextText}
+      </div>
+    </div>
+    <div class="card-meta">
+
+      ${(d.stage==='Won'||d.stage==='Open')&&d.arr?`<div class="arr-tag">${fmtArr(d.arr)}</div>`:""}
+      <span class="chevron">▼</span>
+    </div>`;
+  card.appendChild(hdr);
+
+  // Body
+  const body=document.createElement("div");
+  body.className="card-body";
+  if(isClosed && d.stage==="Won"){
+    body.style.cssText += ";position:relative";
+  }
+
+  // Build sections
+  const SECTIONS = [
+    {
+      key:"deal",
+      html:`<div style="margin-bottom:4px">
+        <div class="field-label" style="margin:0 0 8px">Deal</div>
+        <div style="border-left:3.5px solid #d0d5dd;border-radius:0 6px 6px 0;padding:12px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-left:3.5px solid #d0d5dd">
+        <div class="deal-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px">
+          <div>${(d.stage==='Open'||d.stage==='Won') ? `<select onchange="upd('${id}','targetClose',this.value);this.style.color=this.value?'':'#9ca3af';this.className=this.value?'':'sel-dashed'" class="${d.targetClose?'':'sel-dashed'}" style="color:${d.targetClose?'':'#9ca3af'}">
+  <option value="" style="color:#9ca3af">Close Date</option>
+  <option value="March 2026" ${d.targetClose==='March 2026'?'selected':''} style="color:var(--text-primary)">Mar 2026</option>
+  <option value="April 2026" ${d.targetClose==='April 2026'?'selected':''} style="color:var(--text-primary)">Apr 2026</option>
+  <option value="May 2026" ${d.targetClose==='May 2026'?'selected':''} style="color:var(--text-primary)">May 2026</option>
+  <option value="June 2026" ${d.targetClose==='June 2026'?'selected':''} style="color:var(--text-primary)">Jun 2026</option>
+  <option value="July 2026" ${d.targetClose==='July 2026'?'selected':''} style="color:var(--text-primary)">Jul 2026</option>
+  <option value="August 2026" ${d.targetClose==='August 2026'?'selected':''} style="color:var(--text-primary)">Aug 2026</option>
+  <option value="September 2026" ${d.targetClose==='September 2026'?'selected':''} style="color:var(--text-primary)">Sep 2026</option>
+  <option value="October 2026" ${d.targetClose==='October 2026'?'selected':''} style="color:var(--text-primary)">Oct 2026</option>
+  <option value="November 2026" ${d.targetClose==='November 2026'?'selected':''} style="color:var(--text-primary)">Nov 2026</option>
+  <option value="December 2026" ${d.targetClose==='December 2026'?'selected':''} style="color:var(--text-primary)">Dec 2026</option>
+</select>` : '<select disabled style="opacity:0.4;cursor:not-allowed;color:#9ca3af"><option>Close Date</option></select>'}</div>
+          <div>${(d.stage==='Open'||d.stage==='Won') ? makeSel(id,"forecast",FORECAST_BUCKETS,d.forecast,"Forecast") : '<select disabled style="opacity:0.4;cursor:not-allowed;color:#9ca3af"><option>Forecast</option></select>'}</div>
+          <div>${makeSel(id,"stage",STAGES,d.stage,"")}</div>
+          <div><select data-field="state" onchange="upd('${id}','state',this.value);this.style.color=this.value?'':'#9ca3af';this.className=this.value?'':'sel-dashed'" class="${(d.state||'')?'':'sel-dashed'}" style="width:100%;color:${(d.state||'')?'':'#9ca3af'}">${US_STATES.map(o=>`<option value="${o.v}"${(d.state||'')==o.v?' selected':''} style="color:${o.v?'var(--text-primary)':'#9ca3af'}">${o.l}</option>`).join('')}</select></div>
+          <div><select data-field="tz" onchange="upd('${id}','tz',this.value);this.style.color=this.value?'':'#9ca3af';this.className=this.value?'':'sel-dashed'" class="${(d.tz||'')?'':'sel-dashed'}" style="width:100%;color:${(d.tz||'')?'':'#9ca3af'}">${TZ_OPTS.map(o=>`<option value="${o.v}"${(d.tz||'')==o.v?' selected':''} style="color:${o.v?'var(--text-primary)':'#9ca3af'}">${o.l}</option>`).join('')}</select></div>
+        </div>
+        <div class="deal-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+          <div>${makeOtherField(id,"erp",["BisTrack","P21","Eclipse","Prelude"],d.erp,"ERP")}</div>
+          <div>${makeOtherField(id,"cam",CAM_LIST,d.cam,"CAM")}</div>
+          <div>${makeOtherField(id,"presales",["Alex West","Ciara Blomgren","Hayden Poore"],d.presales,"Presales")}</div>
+          <div>${makeOtherField(id,"bd",["Connor","Taylor","NA"],d.bd,"BD")}</div>
+          <div>${makeOtherField(id,"source",["Inbound","Outbound","Referral","Event","Expansion"],d.source,"Source")}</div>
+        </div>
+        </div>
+      </div>`
+    },
+    {
+      key:"company",
+      html:`<div style="margin-bottom:4px">
+        <div class="field-label" style="margin:0 0 8px">Deal Notes</div>
+        <div style="border-left:3.5px dashed #999;border-radius:0 6px 6px 0;padding:12px 12px;background:#f9fafb;border:1.5px dashed #ccc;border-left:3.5px dashed #999">
+          <textarea oninput="upd('${id}','companyIntel',this.value)" onclick="event.stopPropagation()" placeholder="What's happening with this deal..." style="width:100%;resize:none;min-height:120px">${esc(d.companyIntel||'')}</textarea>
+        </div>
+      </div>`
+    },
+    {
+      key:"company_notes",
+      html:`<div style="margin-bottom:4px">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:8px">
+          <div class="field-label" style="margin:0">Company Intelligence</div>
+          <div class="field-label" style="margin:0">Photo</div>
+          <div class="field-label" style="margin:0">Logo</div>
+        </div>
+        <div style="border-left:3.5px ${(d.notes||'').trim()?'solid':'dashed'} #D8547C;border-radius:0 6px 6px 0;padding:12px 12px;background:#f9fafb;border:1.5px ${(d.notes||'').trim()?'solid #e5e7eb':'dashed #F2BACC'};border-left:3.5px ${(d.notes||'').trim()?'solid':'dashed'} #D8547C">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;align-items:stretch">
+          <div style="display:flex;flex-direction:column">
+            <textarea oninput="upd('${id}','notes',this.value)" onclick="event.stopPropagation()" placeholder="What they do, where they are, company size, industry..." style="flex:1;resize:none;min-height:200px">${esc(d.notes)}</textarea></div>
+          <div style="display:flex;flex-direction:column"><div id="photo-wrap-${id}" style="flex:1;display:flex">${makePhotoBox(id,d.photo)}</div></div>
+          <div style="display:flex;flex-direction:column"><div id="photo-wrap2-${id}" style="flex:1;display:flex">${makePhotoBox2(id,d.photo2)}</div></div>
+        </div>
+        </div>
+      </div>`
+    },
+    {
+      key:"contacts",
+      html: buildContactsSection(id, d)
+    },
+    {
+      key:"meetings",
+      html:(function(){
+        const cl = d.checklist || {};
+        const cld = d.cldate || {};
+        if(!d.meetingData) d.meetingData = {};
+        const REASONS = ["Disco","Demo","Pricing","Review","SOW","Other"];
+        let showCount = 1;
+        for(let n = 1; n <= 20; n++){
+          if(cl['call'+n] || cld['call'+n] || (d.meetingData[n] && d.meetingData[n].reason)) showCount = n + 1;
+          else break;
+        }
+        showCount = Math.max(showCount, 1);
+        const maxShow = Math.min(showCount, 20);
+        let callHtml = '';
+        for(let n = maxShow; n >= 1; n--){
+          const isDone = cl['call'+n];
+          const hasContent = isDone || cld['call'+n] || (d.meetingData[n] && d.meetingData[n].reason);
+          const isNext = n === maxShow && !hasContent;
+          const borderStyle = isNext ? 'border:1.5px dashed #F4D19C;border-left:3.5px dashed #EF9F27' : 'border:1px solid #e5e7eb;border-left:3.5px solid #EF9F27';
+          const bg = isNext ? '#ffffff' : '#f9fafb';
+          const opacity = isNext ? 'opacity:0.6' : '';
+          const md = d.meetingData[n] || {};
+          const reasonVal = md.reason || '';
+          const otherVal = md.otherReason || '';
+          const notesVal = md.notes || '';
+          const isOther = reasonVal === 'Other';
+          const selDash = reasonVal ? '' : 'sel-dashed';
+          const selColor = reasonVal ? '#374151' : '#9ca3af';
+          callHtml += `<div style="padding:10px 12px;${borderStyle};border-radius:0 6px 6px 0;background:${bg};${opacity};position:relative">
+            ${hasContent ? `<button onclick="event.stopPropagation();clearMeeting('${id}',${n})" style="position:absolute;top:6px;right:6px;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;padding:2px 8px;line-height:1.4;border-radius:4px;font-family:inherit;transition:all .15s" onmouseover="this.style.color='#ef4444';this.style.borderColor='#fca5a5';this.style.background='#fef2f2'" onmouseout="this.style.color='#9ca3af';this.style.borderColor='#e5e7eb';this.style.background='#f3f4f6'" title="Clear meeting">✕</button>` : ''}
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <span style="position:relative;display:inline-flex;align-items:center;flex:1">${makeDateSel(id,'call'+n,cld['call'+n])}</span>
+              <select class="${selDash}" onchange="event.stopPropagation();updMeeting('${id}',${n},'reason',this.value)" onclick="event.stopPropagation()" style="flex:1;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;font-family:inherit;color:${selColor};background:#fff;cursor:pointer">
+                <option value="" ${!reasonVal?'selected':''} style="color:#9ca3af">Type</option>
+                ${REASONS.map(r=>`<option value="${r}" ${reasonVal===r?'selected':''}>${r}</option>`).join('')}
+              </select>
+              ${makeCB(id,"cl_call"+n,cl["call"+n],"Done","cb-amber")}
+              ${makeCB(id,"cl_fu"+n,cl["fu"+n],"F/U","cb-amber")}
+            </div>
+            ${isOther ? `<div style="margin-bottom:6px"><input type="text" value="${esc(otherVal)}" oninput="event.stopPropagation();updMeeting('${id}',${n},'otherReason',this.value)" onclick="event.stopPropagation()" placeholder="Meeting type" style="width:100%;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;font-family:inherit;color:#374151;box-sizing:border-box"></div>` : ''}
+            <textarea rows="4" oninput="event.stopPropagation();updMeeting('${id}',${n},'notes',this.value)" onclick="event.stopPropagation()" placeholder="Meeting notes" style="width:100%;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;font-family:inherit;color:#374151;resize:vertical;box-sizing:border-box;background:transparent">${esc(notesVal)}</textarea>
+          </div>`;
+        }
+        return `<div style="margin-bottom:4px">
+        <div class="field-label" style="margin:0 0 8px">Meetings</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          ${callHtml}
+        </div>
+      </div>`;
+      })()
+    },
+    {
+      key:"steps",
+      html: buildActivityTimeline(id, d)
+    },
+    {
+      key:"proposal",
+      html:(function(){
+        const hasProd = (d.products||'').trim().length > 0;
+        const hasArr = (d.arr||'').toString().replace(/[^0-9]/g,'').length > 0 && d.arr !== '0';
+        const hasImp = (d.implFee||'').toString().replace(/[^0-9]/g,'').length > 0 && d.implFee !== '0';
+        const proposalFilled = hasProd || hasArr || hasImp;
+        const propBorder = proposalFilled ? 'border:1px solid #e5e7eb;border-left:3.5px solid #1D9E75' : 'border:1.5px dashed #92CFB2;border-left:3.5px dashed #1D9E75';
+        const propBg = proposalFilled ? '#f9fafb' : '#ffffff';
+        return `<div style="margin-bottom:4px">
+        <div class="field-label" style="margin:0 0 8px">Proposal</div>
+        <div style="${propBorder};border-radius:0 6px 6px 0;padding:10px 12px;background:${propBg}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center">
+          <div style="display:flex;align-items:center;gap:8px;position:relative">
+            <div class="prod-trigger" onclick="toggleProdMenu('${id}')" id="prod-trigger-${id}" style="flex:1;max-width:none${!hasProd?';border:1.5px dashed #92CFB2':''}">
+              ${(function(){const order=["EDA","Financial Statements","Budgets & Forecasts","Rebates","CRM","Insights"];const sel=(d.products||"").split(",").map(s=>s.trim()).filter(Boolean);const sorted=order.filter(p=>sel.includes(p));return sorted.length?sorted.join(', '):'<span style="color:#9ca3af">Products</span>';})()}
+              <span style="color:#9ca3af;font-size:9px;margin-left:4px">&#9660;</span>
+            </div>
+            <div class="prod-menu" id="prod-menu-${id}" style="display:none">
+              ${["EDA","Financial Statements","Budgets & Forecasts","Rebates","CRM","Insights"].map(p=>{
+                const sel=(d.products||"").split(",").map(s=>s.trim()).includes(p);
+                return `<div class="prod-opt${sel?' selected':''}" onclick="toggleProd('${id}','${p}')" id="prodopt-${id}-${p.replace(/[^a-z0-9]/gi,'_')}">${sel?'&#10003; ':'  '}${p}</div>`;
+              }).join('')}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;justify-content:flex-end">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;font-weight:600;color:#6b7280;letter-spacing:.04em">ARR</span>
+              <div class="arr-wrap" style="display:inline-flex;align-items:center${!hasArr?';border:1.5px dashed #92CFB2':''}"><span class="arr-prefix" style="padding:4px 2px 4px 8px;font-size:13px;color:#374151;line-height:1">$</span><input id="arr-bot-${id}" class="arr-input" value="${esc(fmtRaw(d.arr))}" oninput="updArr('${id}',this.value,'bot')" placeholder="0" style="border:none;outline:none;padding:4px 8px 4px 2px;font-size:13px;width:90px"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;font-weight:600;color:#6b7280;letter-spacing:.04em;white-space:nowrap">IMP</span>
+              <div style="display:inline-flex;align-items:center;border-radius:6px;background:#fff;${!hasImp?'border:1.5px dashed #92CFB2':'border:1px solid #e5e7eb'}"><span style="padding:4px 2px 4px 8px;font-size:13px;color:#374151;line-height:1">$</span><input value="${esc(fmtRaw(d.implFee||''))}" oninput="fmtCurrency(this,'${id}','implFee')" placeholder="0" onclick="event.stopPropagation()" style="border:none;outline:none;padding:4px 8px 4px 2px;font-size:13px;width:80px;background:transparent"></div>
+            </div>
+            ${makeCB(id,"pricingSent",d.pricingSent,"Pricing sent")}
+          </div>
+        </div>
+        </div>
+      </div>`;
+      })()
+    },
+  ];
+
+    // Get saved section order for this account
+  const savedOrder = state.deals[id].sectionOrder;
+  // Migrate: clear old section orders that reference removed keys
+  const validKeys = SECTIONS.map(s=>s.key);
+  const needsReset = savedOrder && savedOrder.some(k=>!validKeys.includes(k));
+  const orderedSections = (savedOrder && !needsReset)
+    ? savedOrder.map(k=>SECTIONS.find(s=>s.key===k)).filter(Boolean)
+    : SECTIONS;
+  if(needsReset) upd(id,"sectionOrder",null);
+
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = "position:relative";
+
+  orderedSections.forEach((sec,i)=>{
+    const div = document.createElement("div");
+    div.className = "drag-section";
+    div.dataset.secKey = sec.key;
+    div.style.marginBottom = "26px";
+    div.innerHTML = `` + sec.html;
+    div.addEventListener("dragstart", e=>{
+      e.dataTransfer.effectAllowed="move";
+      e.dataTransfer.setData("text/plain", sec.key);
+      div.classList.add("dragging");
+    });
+    div.addEventListener("dragend", ()=>{
+      div.classList.remove("dragging");
+      wrapper.querySelectorAll(".drag-section").forEach(d=>d.classList.remove("drag-over"));
+      // Save new order
+      const newOrder = [...wrapper.querySelectorAll(".drag-section")].map(d=>d.dataset.secKey);
+      upd(id,"sectionOrder",newOrder);
+    });
+    div.addEventListener("dragover", e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect="move";
+      wrapper.querySelectorAll(".drag-section").forEach(d=>d.classList.remove("drag-over"));
+      div.classList.add("drag-over");
+    });
+    div.addEventListener("drop", e=>{
+      e.preventDefault();
+      const fromKey = e.dataTransfer.getData("text/plain");
+      const fromEl = wrapper.querySelector(`[data-sec-key="${fromKey}"]`);
+      if(fromEl && fromEl !== div){
+        const allSecs = [...wrapper.querySelectorAll(".drag-section")];
+        const fromIdx = allSecs.indexOf(fromEl);
+        const toIdx = allSecs.indexOf(div);
+        if(fromIdx < toIdx) wrapper.insertBefore(fromEl, div.nextSibling);
+        else wrapper.insertBefore(fromEl, div);
+      }
+      div.classList.remove("drag-over");
+    });
+    wrapper.appendChild(div);
+  });
+
+  const delRow = document.createElement("div");
+  delRow.style.cssText = "display:flex;justify-content:flex-end;margin-top:4px";
+  delRow.innerHTML = `<button class="del-btn" onclick="deleteAccount('${id}')">Remove account</button>`;
+  wrapper.appendChild(delRow);
+
+  body.appendChild(wrapper);
+
+  // Tabbed bottom panel
+  body.appendChild(buildTabContainer(id));
+
+  // Won — stage is locked
+  if(d.stage === "Won"){
+    // Lock just the stage dropdown after render
+    setTimeout(()=>{
+      const stageSel = body.querySelector('select[onchange*="stage"]');
+      if(stageSel){ stageSel.disabled = true; stageSel.style.opacity = "0.5"; stageSel.style.cursor = "not-allowed"; }
+    }, 0);
+  }
+
+  card.appendChild(body);
+  return card;
+}
+
+
+
+
+function makeOtherField(id, field, opts, val, placeholder){
+  const isOtherMode = val === '__other__' || (val && !opts.includes(val) && val !== '');
+  const displayVal = val === '__other__' ? '' : (isOtherMode ? val : '');
+  if(isOtherMode){
+    const dashBorder = displayVal ? 'border:1px solid var(--border-mid)' : 'border:1.5px dashed #9ca3af';
+    return `<div id="${field}-wrap-${id}" style="position:relative">
+      <input type="text" value="${esc(displayVal)}" oninput="event.stopPropagation();upd('${id}','${field}',this.value||'__other__')" onclick="event.stopPropagation()" placeholder="${placeholder}" style="width:100%;padding:8px 28px 8px 10px;border-radius:var(--r-sm);${dashBorder};font-size:var(--text-base);color:${displayVal?'var(--text-primary)':'#9ca3af'};font-family:inherit;box-sizing:border-box" id="${field}-input-${id}">
+      <span onclick="clearOtherField('${id}','${field}')" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);cursor:pointer;color:#9ca3af;font-size:14px;line-height:1" title="Back to list">&times;</span>
+    </div>`;
+  }
+  const clr = val ? '' : 'color:#9ca3af;';
+  const dash = val ? '' : 'sel-dashed';
+  return `<div id="${field}-wrap-${id}">
+    <select class="${dash}" onchange="handleOtherSwap('${id}','${field}',this.value)" style="width:100%;${clr}">
+      <option value="" style="color:#9ca3af">${placeholder}</option>
+      ${opts.map(s=>`<option value="${s}"${val===s?' selected':''} style="color:var(--text-primary)">${s}</option>`).join('')}
+      <option value="Other" style="color:var(--text-primary)">Other</option>
+    </select>
+  </div>`;
+}
+
+function handleOtherSwap(id, field, val){
+  if(val === 'Other'){
+    upd(id, field, '__other__');
+    refreshCard(id);
+    setTimeout(()=>{
+      const inp = document.getElementById(field+'-input-'+id);
+      if(inp) inp.focus();
+    }, 50);
+  } else {
+    upd(id, field, val);
+    const sel = document.querySelector('#'+field+'-wrap-'+id+' select');
+    if(sel){ sel.style.color = val ? '' : '#9ca3af'; sel.className = val ? '' : 'sel-dashed'; }
+  }
+}
+
+function clearOtherField(id, field){
+  upd(id, field, '');
+  refreshCard(id);
+}
+
+function makePhotoBox(id, val){
+  if(val){
+    return `<div style="position:relative;display:inline-block">
+      <div class="photo-box" onclick="document.getElementById('photo-input-${id}').click()" title="Click to change photo" style="width:100%;height:100%;min-height:200px;overflow:hidden;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;flex-shrink:0">
+        <img src="${val}" alt="Account photo" style="width:100%;height:100%;object-fit:cover;display:block">
+      </div>
+      <button onclick="event.stopPropagation();deletePhoto('${id}')" title="Remove photo" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+    </div>
+    <input type="file" id="photo-input-${id}" accept="image/*" style="display:none" onchange="handlePhoto('${id}',this)">`;
+  }
+  return `<div class="photo-box" onclick="document.getElementById('photo-input-${id}').click()" style="width:100%;height:100%;min-height:200px;overflow:hidden;border-radius:6px;border:1.5px dashed #D8547C;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+    <div class="photo-placeholder" style="text-align:center;color:#9ca3af;font-size:11px;line-height:1.3">📷<br>Add photo</div>
+  </div>
+  <input type="file" id="photo-input-${id}" accept="image/*" style="display:none" onchange="handlePhoto('${id}',this)">`;
+}
+
+function makePhotoBox2(id, val){
+  if(val){
+    return `<div style="position:relative;display:inline-block">
+      <div class="photo-box" onclick="document.getElementById('photo-input2-${id}').click()" title="Click to change photo" style="width:100%;height:100%;min-height:200px;overflow:hidden;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;flex-shrink:0">
+        <img src="${val}" alt="Account photo 2" style="width:100%;height:100%;object-fit:cover;display:block">
+      </div>
+      <button onclick="event.stopPropagation();deletePhoto2('${id}')" title="Remove photo" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+    </div>
+    <input type="file" id="photo-input2-${id}" accept="image/*" style="display:none" onchange="handlePhoto2('${id}',this)">`;
+  }
+  return `<div class="photo-box" onclick="document.getElementById('photo-input2-${id}').click()" style="width:100%;height:100%;min-height:200px;overflow:hidden;border-radius:6px;border:1.5px dashed #D8547C;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+    <div class="photo-placeholder" style="text-align:center;color:#9ca3af;font-size:11px;line-height:1.3">🏢<br>Add logo</div>
+  </div>
+  <input type="file" id="photo-input2-${id}" accept="image/*" style="display:none" onchange="handlePhoto2('${id}',this)">`;
+}
+
+function deletePhoto(id){
+  state.deals[id].photo = "";
+  saveState();
+  const wrap = document.getElementById("photo-wrap-"+id);
+  if(wrap) wrap.innerHTML = makePhotoBox(id, "");
+  updateHeader();
+}
+
+function deletePhoto2(id){
+  state.deals[id].photo2 = "";
+  saveState();
+  const wrap = document.getElementById("photo-wrap2-"+id);
+  if(wrap) wrap.innerHTML = makePhotoBox2(id, "");
+}
+
+function handlePhoto2(id, input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const SIZE = 200;
+      const canvas = document.createElement('canvas');
+      canvas.width = SIZE; canvas.height = SIZE;
+      const ctx = canvas.getContext('2d');
+      const scale = Math.max(SIZE/img.width, SIZE/img.height);
+      const w = img.width * scale, h = img.height * scale;
+      ctx.drawImage(img, (SIZE-w)/2, (SIZE-h)/2, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      upd(id, 'photo2', dataUrl);
+      const wrap = document.getElementById('photo-wrap2-'+id);
+      if(wrap) wrap.innerHTML = makePhotoBox2(id, dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handlePhoto(id, input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      // Compress to 80x80 thumbnail
+      const SIZE = 200;
+      const canvas = document.createElement('canvas');
+      canvas.width = SIZE; canvas.height = SIZE;
+      const ctx = canvas.getContext('2d');
+      // Cover crop: center the image
+      const scale = Math.max(SIZE/img.width, SIZE/img.height);
+      const w = img.width * scale, h = img.height * scale;
+      ctx.drawImage(img, (SIZE-w)/2, (SIZE-h)/2, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      upd(id, 'photo', dataUrl);
+      savePhoto(id, dataUrl);
+      const wrap = document.getElementById('photo-wrap-'+id);
+      if(wrap) wrap.innerHTML = makePhotoBox(id, dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function makeDateSel(id, key, val){
+  let inputVal = '';
+  if(val){
+    const parts = val.split('/');
+    if(parts.length === 3){
+      const yr = parts[2].length === 2 ? '20'+parts[2] : parts[2];
+      inputVal = `${yr}-${String(parts[0]).padStart(2,'0')}-${String(parts[1]).padStart(2,'0')}`;
+    }
+  }
+  const display = val || '';
+  return `<span style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;padding:3px 6px;border-radius:4px;transition:background .12s;min-height:28px;min-width:80px" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background=''" onclick="event.stopPropagation();var inp=document.getElementById('cldate-${id}-${key}');if(inp)try{inp.showPicker()}catch(e){inp.click()}">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span style="font-size:12px;color:${val?'#374151':'#9ca3af'};font-weight:${val?'600':'400'}">${display || 'Date'}</span>
+    <input type="date" id="cldate-${id}-${key}" value="${inputVal}" onchange="event.stopPropagation();updCLDate('${id}','${key}',this.value)" onclick="event.stopPropagation()" style="position:absolute;left:-9999px;width:0;height:0;opacity:0">
+  </span>`;
+}
+
+function makeSelFromArr(id, field, opts, val, placeholder){
+  const pOpt=placeholder?`<option value="" style="color:#9ca3af">${placeholder}</option>`:"";
+  const options=opts.map(o=>`<option value="${o}"${val===o?" selected":""} style="color:var(--text-primary)">${o}</option>`).join("");
+  const clr=val?'':"color:#9ca3af;";
+  const dash=val?'':'sel-dashed';
+  return `<select class="${dash}" onchange="upd('${id}','${field}',this.value);this.style.color=this.value?'':'#9ca3af';this.className=this.value?'':'sel-dashed'" style="${clr}">${pOpt}${options}</select>`;
+}
+function makeSel(id, field, opts, val, placeholder){
+  const pOpt=placeholder?`<option value="" style="color:#9ca3af">${placeholder}</option>`:"";
+  const options=opts.map(o=>`<option value="${o}"${val===o?" selected":""} style="color:var(--text-primary)">${o}</option>`).join("");
+  const clr=val?'':"color:#9ca3af;";
+  const dash=val?'':'sel-dashed';
+  return `<select class="${dash}" onchange="upd('${id}','${field}',this.value);this.style.color=this.value?'':'#9ca3af';this.className=this.value?'':'sel-dashed'" style="${clr}">${pOpt}${options}</select>`;
+}
+
+function makeCB(id, field, checked, label, colorClass){
+  const isChecklist=field.startsWith("cl_");
+  const clKey=isChecklist?field.slice(3):null;
+  const handler=isChecklist
+    ?`updCL('${id}','${clKey}',!state.deals['${id}'].checklist?.['${clKey}'])`
+    :`upd('${id}','${field}',!state.deals['${id}']['${field}'])`;
+  const cc = colorClass || '';
+  const lc = colorClass ? colorClass.replace('cb-','cbl-') : '';
+  return `<div class="cb-wrap" onclick="${handler}">
+    <div class="cb-box${checked?" checked":""}${cc?' '+cc:''}" id="cb-${id}-${field}">
+      ${checked?`<svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:""}
+    </div>
+    <span class="cb-label${checked?" checked":""}${lc?' '+lc:''}" id="cbl-${id}-${field}">${label}</span>
+  </div>`;
+}
+
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function cleanVal(s){ return (s||"").replace(/__other__/g,""); }
+
+// ── Update functions ──
+function unlockDeal(id){
+  state.deals[id].stage = 'Open';
+  state.deals[id].closedLost = null;
+  saveState();
+  // Clear month filter so the newly-unlocked card is visible regardless of targetClose
+  activeMonthFilter = '';
+  const sel = document.getElementById('month-filter');
+  if(sel) sel.value = '';
+  renderDeals();
+  // Find card, open it, scroll to it
+  const newCard = document.querySelector('[data-id="'+id+'"]');
+  if(newCard){
+    newCard.classList.add('open');
+    const chevron = newCard.querySelector('.chevron');
+    if(chevron) chevron.textContent = '▲';
+    setTimeout(()=>newCard.scrollIntoView({behavior:'smooth', block:'center'}), 50);
+  }
+}
+
+const STATE_TZ = {
+  "AL":"CT","AK":"AK","AZ":"MT","AR":"CT","CA":"PT","CO":"MT","CT":"ET","DE":"ET",
+  "FL":"ET","GA":"ET","HI":"HI","ID":"MT","IL":"CT","IN":"ET","IA":"CT","KS":"CT",
+  "KY":"ET","LA":"CT","ME":"ET","MD":"ET","MA":"ET","MI":"ET","MN":"CT","MS":"CT",
+  "MO":"CT","MT":"MT","NE":"CT","NV":"PT","NH":"ET","NJ":"ET","NM":"MT","NY":"ET",
+  "NC":"ET","ND":"CT","OH":"ET","OK":"CT","OR":"PT","PA":"ET","RI":"ET","SC":"ET",
+  "SD":"CT","TN":"CT","TX":"CT","UT":"MT","VT":"ET","VA":"ET","WA":"PT","WV":"ET",
+  "WI":"CT","WY":"MT","DC":"ET",
+  "ON":"ET","QC":"ET","NB":"AT","NS":"AT","PE":"AT","NL":"AT",
+  "MB":"CT","SK":"CT","AB":"MT","BC":"PT","YT":"PT","NT":"MT","NU":"ET"
+};
+
+const US_STATES = [
+  {v:"",l:"State"},
+  {v:"AL",l:"AL - Alabama"},{v:"AK",l:"AK - Alaska"},{v:"AZ",l:"AZ - Arizona"},
+  {v:"AR",l:"AR - Arkansas"},{v:"CA",l:"CA - California"},{v:"CO",l:"CO - Colorado"},
+  {v:"CT",l:"CT - Connecticut"},{v:"DE",l:"DE - Delaware"},{v:"DC",l:"DC - D.C."},
+  {v:"FL",l:"FL - Florida"},{v:"GA",l:"GA - Georgia"},{v:"HI",l:"HI - Hawaii"},
+  {v:"ID",l:"ID - Idaho"},{v:"IL",l:"IL - Illinois"},{v:"IN",l:"IN - Indiana"},
+  {v:"IA",l:"IA - Iowa"},{v:"KS",l:"KS - Kansas"},{v:"KY",l:"KY - Kentucky"},
+  {v:"LA",l:"LA - Louisiana"},{v:"ME",l:"ME - Maine"},{v:"MD",l:"MD - Maryland"},
+  {v:"MA",l:"MA - Massachusetts"},{v:"MI",l:"MI - Michigan"},{v:"MN",l:"MN - Minnesota"},
+  {v:"MS",l:"MS - Mississippi"},{v:"MO",l:"MO - Missouri"},{v:"MT",l:"MT - Montana"},
+  {v:"NE",l:"NE - Nebraska"},{v:"NV",l:"NV - Nevada"},{v:"NH",l:"NH - New Hampshire"},
+  {v:"NJ",l:"NJ - New Jersey"},{v:"NM",l:"NM - New Mexico"},{v:"NY",l:"NY - New York"},
+  {v:"NC",l:"NC - North Carolina"},{v:"ND",l:"ND - North Dakota"},{v:"OH",l:"OH - Ohio"},
+  {v:"OK",l:"OK - Oklahoma"},{v:"OR",l:"OR - Oregon"},{v:"PA",l:"PA - Pennsylvania"},
+  {v:"RI",l:"RI - Rhode Island"},{v:"SC",l:"SC - South Carolina"},{v:"SD",l:"SD - South Dakota"},
+  {v:"TN",l:"TN - Tennessee"},{v:"TX",l:"TX - Texas"},{v:"UT",l:"UT - Utah"},
+  {v:"VT",l:"VT - Vermont"},{v:"VA",l:"VA - Virginia"},{v:"WA",l:"WA - Washington"},
+  {v:"WV",l:"WV - West Virginia"},{v:"WI",l:"WI - Wisconsin"},{v:"WY",l:"WY - Wyoming"},
+  {v:"AB",l:"AB - Alberta"},{v:"BC",l:"BC - British Columbia"},{v:"MB",l:"MB - Manitoba"},
+  {v:"NB",l:"NB - New Brunswick"},{v:"NL",l:"NL - Newfoundland"},{v:"NS",l:"NS - Nova Scotia"},
+  {v:"NT",l:"NT - Northwest Territories"},{v:"NU",l:"NU - Nunavut"},{v:"ON",l:"ON - Ontario"},
+  {v:"PE",l:"PE - Prince Edward Island"},{v:"QC",l:"QC - Quebec"},{v:"SK",l:"SK - Saskatchewan"},
+  {v:"YT",l:"YT - Yukon"}
+];
+
+const TZ_OPTS = [
+  {v:"",l:"Time Zone"},
+  {v:"ET",l:"ET - Eastern"},{v:"CT",l:"CT - Central"},
+  {v:"MT",l:"MT - Mountain"},{v:"PT",l:"PT - Pacific"},
+  {v:"AK",l:"AK - Alaska"},{v:"HI",l:"HI - Hawaii"},
+  {v:"AT",l:"AT - Atlantic"}
+];
+
+function tzFromState(st){
+  if(!st) return "";
+  return STATE_TZ[st.trim().toUpperCase()] || "";
+}
+
+function upd(id, field, val){
+  state.deals[id][field]=val;
+  // Auto-log key changes to History
+  if(field==='stage' && val) logActivity(id, `Stage → ${val}`, true);
+  if(field==='nextStep' && val) logActivity(id, `Next Step updated: ${val}`, true);
+  // When stage changes to Won, sync forecast+bucket; clear targetClose for non-Open/Won
+  if(field==="stage"){
+    if(val==="Won"){ state.deals[id].bucket="Won"; state.deals[id].forecast="Won"; }
+    if(val!=="Open" && val!=="Won") state.deals[id].targetClose="";
+    saveState(); updateHeader(); renderDeals(); return;
+  }
+  // When forecast changes to Won, sync stage+bucket and move card
+  if(field==="forecast" && val==="Won"){
+    state.deals[id].stage="Won"; state.deals[id].bucket="Won";
+    logActivity(id, `Stage → Won`, true);
+    saveState(); updateHeader(); renderDeals(); return;
+  }
+  // Auto-calculate timezone from state
+  if(field==="state"){
+    const auto = tzFromState(val);
+    if(auto){
+      state.deals[id].tz = auto;
+      const tzSel = document.querySelector(`[data-id="${id}"] select[data-field="tz"]`);
+      if(tzSel) tzSel.value = auto;
+    }
+  }
+  saveState();
+  updateHeader();
+  // Full re-render when stage changes (to move card between sections)
+  if(field==="stage" || (field==="forecast" && val==="Won")){
+    renderDeals();
+    return;
+  }
+  // Live-update subtitle when erp, cam, state, tz, or targetClose changes
+  if(field==="erp" || field==="cam" || field==="state" || field==="tz"){
+    const sub = document.getElementById("card-sub-"+id);
+    if(sub){
+      const d = state.deals[id];
+      let html = "";
+      if(cleanVal(d.erp)) html += `<span style="color:#4b5563">${cleanVal(d.erp)}</span>`;
+      if(cleanVal(d.cam)) html += `<span>${cleanVal(d.cam)}</span>`;
+      sub.innerHTML = html;
+    }
+    return;
+  }
+  // Live-update the card header month label when targetClose changes
+  if(field==="targetClose"){
+    const d=state.deals[id];
+    const isClosed=d.stage==="Won";
+    const hdrSpan=document.querySelector(`[data-id="${id}"] .card-header-month`);
+    if(hdrSpan){
+      if(isClosed){
+        hdrSpan.textContent=(d.stage==="Won"?"WON":"CLOSED")+(val?" "+val:"");
+      } else {
+        hdrSpan.textContent=val||"No close month";
+        hdrSpan.style.color=val?"#6b7280":"#d1d5db";
+      }
+    }
+    return;
+  }
+  // Update checkbox DOM for boolean fields
+  if(field==="pricingSent"){
+    const box=document.getElementById(`cb-${id}-pricingSent`);
+    const lbl=document.getElementById(`cbl-${id}-pricingSent`);
+    if(box){
+      box.className="cb-box"+(val?" checked":"");
+      box.innerHTML=val?`<svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:"";
+    }
+    if(lbl){ lbl.className="cb-label"+(val?" checked":""); }
+    return;
+  }
+}
+
+function updCL(id, key, val){
+  if(!state.deals[id].checklist) state.deals[id].checklist={};
+  state.deals[id].checklist[key]=val;
+  // Auto-advance to Open when 1st call is checked on pre-open stages
+  const autoOpenStages = ["Booked","Reschedule","Hot","Nurture","Passive","Closed Lost"];
+  if(key==="call1" && val && autoOpenStages.includes(state.deals[id].stage)){
+    state.deals[id].stage = "Open";
+    saveState();
+    refreshCard(id);
+    return;
+  }
+  saveState();
+  // Update checkbox UI
+  const box=document.getElementById(`cb-${id}-cl_${key}`);
+  const lbl=document.getElementById(`cbl-${id}-cl_${key}`);
+  if(box){
+    const isAmber = key.startsWith('call') || key.startsWith('fu');
+    box.className="cb-box"+(val?" checked":"")+(isAmber?" cb-amber":"");
+    box.innerHTML=val?`<svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:"";
+  }
+  if(lbl){ lbl.className="cb-label"+(val?" checked":"")+(isAmber?" cbl-amber":""); }
+  // Update progress bar
+  const done=CHECKLIST.filter(c=>state.deals[id].checklist?.[c.id]).length;
+  const p=Math.round(done/CHECKLIST.length*100);
+  const prog=document.getElementById("prog-"+id);
+  if(prog) prog.style.width=p+"%";
+  const sdiv=prog?.closest(".section-div")?.querySelector("span");
+  if(sdiv) sdiv.textContent=`Close Checklist - ${p}%`;
+  refreshCardHeader(id);
+}
+
+function refreshCardHeader(id){
+  // Update just the subtitle text (erp, cam, close month) without replacing card
+  const d = state.deals[id];
+  if(!d) return;
+  const sub = document.getElementById("card-sub-"+id);
+  if(sub){
+    const parts = [d.erp, d.cam];
+    if(d.stage === "Won" && d.targetClose) parts.push("Won " + d.targetClose);
+    else if(d.stage === "Open" && d.targetClose) parts.push(d.targetClose);
+    sub.textContent = parts.filter(Boolean).join("   ");
+  }
+  const nameEl = document.getElementById("card-name-"+id);
+  if(nameEl) nameEl.textContent = d.name || "Unnamed";
+  updateHeader();
+}
+
+function toggleCard(id){
+  const card = document.querySelector('[data-id="'+id+'"]');
+  if(!card) return;
+  const isOpen = card.classList.contains('open');
+  
+  // Remember scroll position and card's position on screen
+  const cardRect = card.getBoundingClientRect();
+  const cardTopBefore = cardRect.top;
+  
+  // Close all other open cards first — clear their tints and reset tabs
+  document.querySelectorAll('.card.open').forEach(c => {
+    if(c.dataset.id !== id){
+      c.classList.remove('open');
+      const b = c.querySelector('.card-body');
+      if(b) b.style.display = 'none';
+      const ch = c.querySelector('.chevron');
+      if(ch) ch.textContent = '▼';
+      c.style.background = '';
+      const ch2 = c.querySelector('.card-header');
+      if(ch2) ch2.style.background = '';
+      c.style.borderLeftColor = c.dataset.borderColor || '';
+      // Reset tabs to closed — state AND DOM
+      if(state.deals[c.dataset.id]) state.deals[c.dataset.id].activeTab = null;
+      c.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
+      c.querySelectorAll('.bottom-tab-panel').forEach(p => p.classList.remove('active'));
+    }
+  });
+  
+  // Restore scroll so clicked card stays in the same screen position
+  const cardTopAfter = card.getBoundingClientRect().top;
+  if(cardTopAfter !== cardTopBefore){
+    window.scrollBy(0, cardTopAfter - cardTopBefore);
+  }
+  
+  card.classList.toggle('open', !isOpen);
+  const body = card.querySelector('.card-body');
+  if(body) body.style.display = isOpen ? 'none' : 'block';
+  const chevron = card.querySelector('.chevron');
+  if(chevron) chevron.textContent = isOpen ? '▼' : '▲';
+  // Tint header when open, clear when closed
+  const hdrEl = card.querySelector('.card-header');
+  if(hdrEl) hdrEl.style.background = isOpen ? '' : (card.dataset.cardBg || '');
+  card.style.borderLeftColor = isOpen ? (card.dataset.borderColor || '') : 'transparent';
+  // If closing this card, reset its tabs — state AND DOM
+  if(isOpen){
+    if(state.deals[id]) state.deals[id].activeTab = null;
+    card.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
+    card.querySelectorAll('.bottom-tab-panel').forEach(p => p.classList.remove('active'));
+  }
+}
+
+function deleteAccount(id){
+  const name = state.deals[id]?.name || 'this account';
+  const btn = document.querySelector(`.del-btn[onclick="deleteAccount('${id}')"]`);
+  if(btn && btn.dataset.confirming !== 'yes'){
+    btn.dataset.confirming = 'yes';
+    btn.textContent = `⚠ Confirm delete "${name}"?`;
+    btn.style.background = '#ef4444';
+    btn.style.color = '#fff';
+    setTimeout(()=>{
+      if(btn){ btn.dataset.confirming=''; btn.textContent='Remove account'; btn.style.background=''; btn.style.color=''; }
+    }, 3000);
+    return;
+  }
+  state.ids=state.ids.filter(i=>i!==id);
+  delete state.deals[id];
+  if(openId===id) openId=null;
+  saveState();
+  renderDeals();
+}
+
+function addAccount(){
+  const input=document.getElementById("add-input");
+  const name=input.value.trim();
+  if(!name) return;
+  const id="acct_"+Date.now();
+  state.ids.push(id);
+  state.deals[id]={...EMPTY, name};
+  input.value="";
+  openId=id;
+  // Make sure the section the new account lands in is expanded
+  const newStage = state.deals[id].stage || "Nurture";
+  collapsedSections.delete(newStage);
+  saveState();
+  renderDeals();
+  setTimeout(()=>{
+    const card=document.getElementById("card-"+id);
+    if(card) card.scrollIntoView({behavior:"smooth",block:"center"});
+  },150);
+}
+
+// ── Call View ──
+
+let activeSearch = "";
+
+function filterSearch(val){
+  activeSearch = val.trim().toLowerCase();
+  const clearBtn = document.getElementById("search-clear");
+  if(clearBtn) clearBtn.style.display = activeSearch ? "flex" : "none";
+  renderDeals();
+}
+
+function clearSearch(){
+  activeSearch = "";
+  const input = document.getElementById("search-input");
+  if(input) input.value = "";
+  const clearBtn = document.getElementById("search-clear");
+  if(clearBtn) clearBtn.style.display = "none";
+  document.getElementById("search-count").textContent = "";
+  renderDeals();
+}
+
+function matchesSearch(d){
+  if(!activeSearch) return true;
+  const q = activeSearch;
+  const fields = [d.name, d.cam, d.erp, d.contacts, d.notes, d.nextStep, d.lastStep, d.products, d.source, d.competitors, d.bd, d.presales];
+  return fields.some(f => f && f.toLowerCase().includes(q));
+}
+
+function filterByMonth(){
+  activeMonthFilter = document.getElementById("month-filter").value;
+  wonMonthFilter = ""; // clear sub-filter when main filter changes
+  
+  // When a specific month is selected, only show Won/Open/Booked expanded
+  const alwaysCollapsed = ["Hot","Nurture","Reschedule","Booked","Passive","Closed Lost"];
+  if(activeMonthFilter && activeMonthFilter !== "__ytd__"){
+    alwaysCollapsed.forEach(s => collapsedSections.add(s));
+    collapsedSections.add("Won");
+    collapsedSections.delete("Open");
+  } else {
+    // Full Year or YTD: restore defaults — only Open expanded
+    alwaysCollapsed.forEach(s => collapsedSections.add(s));
+    collapsedSections.add("Won");
+    collapsedSections.delete("Open");
+  }
+  
+  renderDeals();
+}
+
+
+function exportJSON(){
+  const today = new Date().toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"2-digit"}).replace(/\//g,"-");
+  const filename = "DealInsight_Backup_"+today+".json";
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 1000);
+  const statusEl = document.getElementById("save-status");
+  if(statusEl){ statusEl.textContent="● Backup saved"; statusEl.style.color="#178a65"; setTimeout(()=>{ statusEl.textContent="● Saved"; },3000); }
+}
+
+async function importJSON(input){
+  const file = input.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById("save-status");
+  try{
+    const text = await file.text();
+    const loaded = JSON.parse(text);
+    if(!loaded.ids || !loaded.deals){ alert("Invalid backup file - missing ids or deals."); return; }
+    state = loaded;
+    renderDeals();
+    // Save IMMEDIATELY to server file — no debounce
+    const slim = JSON.parse(JSON.stringify(state));
+    Object.keys(slim.deals).forEach(id=>{ delete slim.deals[id].photo; });
+    await idbSet(SK, slim);
+    _unsavedChanges = false;
+    if(statusEl){ statusEl.textContent="● Backup loaded & saved!"; statusEl.style.color="#178a65"; setTimeout(()=>{ statusEl.textContent="● Saved"; },4000); }
+  }catch(err){
+    alert("Could not read backup file: "+err.message);
+    if(statusEl){ statusEl.textContent="● Load failed!"; statusEl.style.color="#ef4444"; }
+  }
+  input.value = "";
+}
+
+function exportExcel(){
+  const rows = [["Company","Bucket","ARR","Target Close","ERP","Source","CAM","Presales","BD","Contacts","Next Steps","Last Step","Critical Path","Risks","Signals","HubSpot #","Why Opp","1st Call","FU Sent","2nd Meeting","Gong","Scoping","Signor","SOW","PO","Sonya Handoff","Welcome Email","Kickoff"]];
+  const cl = ["call1","fu1","call2","gong1","scoping","signor","sow","po","sonya","welcome","kickoff"];
+  sortedIds().forEach(id=>{
+    const d=state.deals[id]||{};
+    rows.push([
+      d.name||"",d.bucket||"",d.arr||"",d.targetClose||"",cleanVal(d.erp),
+      cleanVal(d.source),cleanVal(d.cam),cleanVal(d.presales),cleanVal(d.bd),d.contacts||"",
+      d.nextStep||"",d.lastStep||"",d.criticalPath||"",d.risks||"",
+      d.signalsDone?"YES":"",d.hubspotNum||"",d.whyOpp||"",
+      ...cl.map(k=>d.checklist?.[k]?"YES":"")
+    ]);
+  });
+  let csv = rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
+  const blob = new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  const today=new Date().toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"2-digit"}).replace(/\//g,"-");
+  a.download=`DealInsight_Pipeline_${today}.csv`;
+  a.click();
+}
+// ── Unsaved changes warning ──
+window.addEventListener('beforeunload', e => {
+  if(_unsavedChanges){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// ── Init ──
+const hwEl=document.getElementById("header-week-inline"); if(hwEl) hwEl.textContent="Week of "+getWeekLabel();
+loadState().then(()=>{
+  renderDeals();
+  populateDateDropdowns();
+  // Restore saved cl dates from state
+  state.ids.forEach(id=>{
+    const d=state.deals[id];
+    if(!d||!d.cldate) return;
+    Object.entries(d.cldate).forEach(([key,val])=>{
+      if(!val) return;
+      const sel=document.querySelector(`select.cl-date-sel[onchange*="${id}"][onchange*="${key}"]`);
+      if(sel) sel.value=val;
+    });
+  });
+  // FORCE all cards closed — belt AND suspenders
+  document.querySelectorAll('.card').forEach(c => {
+    c.classList.remove('open');
+    const body = c.querySelector('.card-body');
+    if(body) body.style.display = 'none';
+    const ch = c.querySelector('.chevron');
+    if(ch) ch.textContent = '▼';
+  });
+  if(!_loadedFromSave) showRestoreModal();
+}).catch(()=>{ renderDeals(); showRestoreModal(); });
+
+function showRestoreModal(){
+  const ov=document.createElement("div");
+  ov.id="restore-overlay";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:99999;display:flex;align-items:center;justify-content:center";
+  ov.innerHTML=`<div style="background:#fff;border-radius:16px;padding:40px;max-width:480px;width:90%;box-shadow:0 25px 60px rgba(0,0,0,0.4);text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+    <h2 style="margin:0 0 12px;font-size:22px;color:#1e293b">Your saved data wasn't found</h2>
+    <p style="margin:0 0 8px;color:#64748b;font-size:15px;line-height:1.5">This happens when you open a new version of the tracker — the browser treats it as a different app and loses access to your previous saves.</p>
+    <p style="margin:0 0 28px;color:#64748b;font-size:15px;line-height:1.5"><strong>If you have a backup JSON file</strong>, import it now to restore everything.</p>
+    <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;background:#178a65;color:#fff;padding:12px 28px;border-radius:8px;font-size:16px;font-weight:700;margin-bottom:16px">
+      📂 Import Backup JSON
+      <input type="file" accept=".json" onchange="importJSON(this);document.getElementById('restore-overlay').remove()" style="display:none">
+    </label><br>
+    <button onclick="document.getElementById('restore-overlay').remove()" style="background:none;border:none;color:#94a3b8;font-size:13px;cursor:pointer;margin-top:8px;text-decoration:underline">
+      Continue without restoring (use base data)
+    </button>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function updArr(id, raw, from){
+  const digits = raw.replace(/[^0-9]/g,'');
+  upd(id,'arr',digits);
+  const formatted = digits ? parseInt(digits,10).toLocaleString('en-US') : '';
+  const top = document.getElementById('arr-top-'+id);
+  const bot = document.getElementById('arr-bot-'+id);
+  const el = from==='top' ? top : bot;
+  if(el){
+    const pos = el.selectionStart;
+    const oldLen = el.value.length;
+    el.value = formatted;
+    const newLen = el.value.length;
+    const newPos = Math.max(0, pos + (newLen - oldLen));
+    el.setSelectionRange(newPos, newPos);
+  }
+  if(from==='top' && bot) bot.value = formatted;
+  if(from==='bot' && top) top.value = formatted;
+}
+
+function fmtCurrency(el, id, field){
+  const digits = el.value.replace(/[^0-9]/g,'');
+  const formatted = digits ? parseInt(digits,10).toLocaleString('en-US') : '';
+  const pos = el.selectionStart;
+  const oldLen = el.value.length;
+  el.value = formatted;
+  const newLen = el.value.length;
+  const newPos = Math.max(0, pos + (newLen - oldLen));
+  el.setSelectionRange(newPos, newPos);
+  upd(id, field, digits);
+}
+
+function syncArrBottom(id, val){
+  const botArr = document.getElementById('arr-bot-'+id);
+  if(botArr) botArr.value = val;
+}
+
+function syncArr(id, val){
+  // Sync to the top ARR display field if it exists
+  const topArr = document.getElementById('arr-top-'+id);
+  if(topArr) topArr.value = val;
+}
+
+
+
+function toggleProdMenu(id){
+  const menu = document.getElementById('prod-menu-'+id);
+  if(!menu) return;
+  const isOpen = menu.style.display !== 'none';
+  document.querySelectorAll('.prod-menu').forEach(m=>m.style.display='none');
+  menu.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen){
+    setTimeout(()=>{
+      const handler = e=>{
+        if(!menu.contains(e.target) && e.target.id!=='prod-trigger-'+id){
+          menu.style.display='none';
+          document.removeEventListener('click',handler);
+        }
+      };
+      document.addEventListener('click',handler);
+    },10);
+  }
+}
+
+function toggleProd(id, product){
+  const d = state.deals[id];
+  let selected = (d.products||"").split(",").map(s=>s.trim()).filter(Boolean);
+  const i = selected.indexOf(product);
+  if(i>=0) selected.splice(i,1);
+  else selected.push(product);
+  const order=["EDA","Financial Statements","Budgets & Forecasts","Rebates","CRM","Insights"];
+  const sorted = order.filter(p=>selected.includes(p));
+  const newVal = sorted.join(", ");
+  upd(id,'products',newVal);
+  const trigger = document.getElementById('prod-trigger-'+id);
+  if(trigger) trigger.innerHTML = (sorted.length ? sorted.join(', ') : '<span style="color:#9ca3af">Products</span>') + '<span style="color:#9ca3af;font-size:9px;margin-left:4px">&#9660;</span>';
+  const key = product.replace(/[^a-z0-9]/gi,'_');
+  const opt = document.getElementById('prodopt-'+id+'-'+key);
+  if(opt){
+    const isNow = sorted.includes(product);
+    opt.className = 'prod-opt'+(isNow?' selected':'');
+    opt.innerHTML = (isNow?'✓ ':'  ')+product;
+  }
+}
+
+function updMeeting(id, n, field, value){
+  const d = state.deals[id];
+  if(!d) return;
+  if(!d.meetingData) d.meetingData = {};
+  if(!d.meetingData[n]) d.meetingData[n] = {};
+  d.meetingData[n][field] = value;
+  saveState();
+  // Only refresh (which can add next meeting row) when a date is set
+  const cld = d.cldate || {};
+  if(cld['call'+n]) refreshCard(id);
+}
+
+function clearMeeting(id, n){
+  const d = state.deals[id];
+  if(!d) return;
+  if(!d.cldate) d.cldate = {};
+  if(!d.checklist) d.checklist = {};
+  delete d.cldate['call'+n];
+  delete d.checklist['call'+n];
+  delete d.checklist['fu'+n];
+  if(d.meetingData) delete d.meetingData[n];
+  saveState();
+  refreshCard(id);
+}
+
+function updCLDate(id,key,val){
+  if(!state.deals[id].cldate) state.deals[id].cldate={};
+  // Convert YYYY-MM-DD to M/D/YY
+  let stored = val;
+  if(val && val.includes('-')){
+    const parts = val.split('-');
+    stored = `${parseInt(parts[1])}/${parseInt(parts[2])}/${parts[0].slice(2)}`;
+  }
+  state.deals[id].cldate[key] = stored;
+  // Auto-advance to Open when 1st call date is set on pre-open stages
+  const autoOpenStages = ["Booked","Reschedule","Hot","Nurture","Passive","Closed Lost"];
+  if(key==="call1" && stored && autoOpenStages.includes(state.deals[id].stage)){
+    state.deals[id].stage = "Open";
+  }
+  saveState();
+  refreshCard(id);
+}
+
+function populateDateDropdowns(){
+  // Build date list: 90 days back through 180 days forward
+  const opts=[];
+  const today=new Date();
+  for(let d=-90;d<=180;d++){
+    const dt=new Date(today);
+    dt.setDate(today.getDate()+d);
+    const m=dt.getMonth()+1;
+    const day=dt.getDate();
+    const y=dt.getFullYear();
+    opts.push(`${m}/${day}/${y}`);
+  }
+  document.querySelectorAll('select.cl-date-sel').forEach(sel=>{
+    const saved=sel.value;
+    // Preserve placeholder
+    sel.innerHTML='<option value="">date</option>';
+    opts.forEach(v=>{
+      const o=document.createElement('option');
+      o.value=v; o.textContent=v;
+      if(v===saved) o.selected=true;
+      sel.appendChild(o);
+    });
+    // Restore saved value even if outside range
+    if(saved && saved!==sel.value){
+      const o=document.createElement('option');
+      o.value=saved; o.textContent=saved; o.selected=true;
+      sel.appendChild(o);
+      sel.value=saved;
+    }
+  });
+}
+
+// ── Data import/export dropdowns ──
+function toggleDataDD(which) {
+  const importDD = document.getElementById('import-dd');
+  const exportDD = document.getElementById('export-dd');
+  if(which === 'import') {
+    const show = importDD.style.display === 'none';
+    importDD.style.display = show ? 'block' : 'none';
+    exportDD.style.display = 'none';
+  } else {
+    const show = exportDD.style.display === 'none';
+    exportDD.style.display = show ? 'block' : 'none';
+    importDD.style.display = 'none';
+  }
+}
+document.addEventListener('click', e => {
+  if(!e.target.closest('#import-dd') && !e.target.closest('[onclick*="toggleDataDD"]'))
+    document.getElementById('import-dd').style.display = 'none';
+  if(!e.target.closest('#export-dd') && !e.target.closest('[onclick*="toggleDataDD"]'))
+    document.getElementById('export-dd').style.display = 'none';
+});
+
+// ── Alert system ──
+let isNoon = true;
+function toggleTheme(){
+  isNoon = !isNoon;
+  const track = document.getElementById('theme-toggle');
+  const dot = document.getElementById('theme-toggle-dot');
+  if(isNoon){
+    track.style.background = '#e2e6ea';
+    dot.style.background = '#BDB8E9';
+    dot.style.right = 'auto';
+    dot.style.left = '2px';
+  } else {
+    track.style.background = '#3d4470';
+    dot.style.background = '#AFA9EC';
+    dot.style.left = 'auto';
+    dot.style.right = '2px';
+  }
+}
+
+function toggleSearchBar(){
+  const row = document.getElementById('search-bar-row');
+  if(!row) return;
+  const isVisible = row.style.display !== 'none';
+  row.style.display = isVisible ? 'none' : 'block';
+  if(!isVisible){
+    const input = document.getElementById('search-input');
+    if(input) input.focus();
+  }
+}
+
+function togglePeriodDD(){
+  const dd = document.getElementById('period-dd');
+  const ch = document.getElementById('period-chev');
+  if(!dd) return;
+  const isOpen = dd.style.display !== 'none';
+  dd.style.display = isOpen ? 'none' : 'block';
+  if(ch) ch.style.transform = isOpen ? '' : 'rotate(180deg)';
+  if(!isOpen) populatePeriodDD();
+}
+
+function populatePeriodDD(){
+  const dd = document.getElementById('period-dd');
+  if(!dd) return;
+  const sel = document.getElementById('month-filter');
+  const opts = sel ? Array.from(sel.options) : [];
+  dd.innerHTML = opts.map(o => {
+    const active = o.value === activeMonthFilter;
+    return '<div onclick="selectPeriod(\''+o.value+'\')" style="padding:10px 14px;font-size:12px;font-weight:'+(active?'700':'500')+';color:'+(active?'#fff':'#9999BB')+';cursor:pointer;border-bottom:1px solid #2e3358;" onmouseenter="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseleave="this.style.background=\'\'">'+o.text+'</div>';
+  }).join('');
+}
+
+function selectPeriod(val){
+  const sel = document.getElementById('month-filter');
+  if(sel) sel.value = val;
+  const label = document.getElementById('period-label');
+  const opt = sel ? Array.from(sel.options).find(o=>o.value===val) : null;
+  if(label) label.textContent = opt ? opt.text : 'Full year';
+  document.getElementById('period-dd').style.display = 'none';
+  document.getElementById('period-chev').style.transform = '';
+  filterByMonth();
+}
+
+function toggleAlert(id) {
+  var dd = document.getElementById('dd_' + id);
+  var ch = document.getElementById('chev_' + id);
+  if(!dd || !ch) return;
+  var isOpen = dd.classList.contains('open');
+  document.querySelectorAll('.alert-dd').forEach(function(el) { el.classList.remove('open'); });
+  document.querySelectorAll('.chev').forEach(function(el) { el.style.transform = ''; });
+  if (!isOpen) {
+    dd.classList.add('open');
+    ch.style.transform = 'rotate(180deg)';
+  }
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.alert-wrap')) {
+    document.querySelectorAll('.alert-dd').forEach(function(el) { el.classList.remove('open'); });
+    document.querySelectorAll('.chev').forEach(function(el) { el.style.transform = ''; });
+  }
+  if (!e.target.closest('#period-wrap')) {
+    const dd = document.getElementById('period-dd');
+    const ch = document.getElementById('period-chev');
+    if(dd) dd.style.display = 'none';
+    if(ch) ch.style.transform = '';
+  }
+});
+
+function updateAlerts(){
+  const alerts = [];
+  const colorMap = { pink:"#D4537E", amber:"#EF9F27", purple:"#AFA9EC", teal:"#1D9E75" };
+  state.ids.forEach(id => {
+    const d = state.deals[id];
+    if(!d || d.stage === "Won" || d.stage === "Closed Lost") return;
+    // No next step defined
+    if(d.stage === "Open" && !d.nextStep){
+      alerts.push({ name: d.name, note: "No next step defined.", color: colorMap.pink });
+    }
+    // Missing ARR on Open deals
+    if(d.stage === "Open" && !d.arr){
+      alerts.push({ name: d.name, note: "ARR not set on open deal.", color: colorMap.amber });
+    }
+    // Missing close month on Open deals
+    if(d.stage === "Open" && !d.targetClose){
+      alerts.push({ name: d.name, note: "No close month set.", color: colorMap.purple });
+    }
+  });
+  // Cap at 5 alerts
+  const shown = alerts.slice(0, 5);
+  const countLabel = document.getElementById('alert-count-label');
+  if(countLabel) countLabel.textContent = shown.length + " ALERT" + (shown.length !== 1 ? "S" : "");
+  const dd = document.getElementById('dd_main');
+  if(!dd) return;
+  if(shown.length === 0){
+    dd.innerHTML = '<div class="alert-item alert-item-dark"><div class="alert-text"><div class="alert-title" style="color:#9999BB;">No alerts right now</div></div></div>';
+    return;
+  }
+  dd.innerHTML = shown.map(a =>
+    `<div class="alert-item alert-item-dark">
+      <div class="alert-dot" style="background:${a.color};"></div>
+      <div class="alert-text">
+        <div class="alert-title">${a.name}</div>
+        <div class="alert-sub">${a.note}</div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+
+</script>
+
+
+</body></html>

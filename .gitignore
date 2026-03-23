@@ -1,0 +1,23 @@
+# Mac junk
+.DS_Store
+
+# Live deal data (confidential)
+dealinsight_data.json
+dealinsight_data_PHOCAS_BACKUP.json
+
+# Data exports
+*.xlsx
+
+# Photos (too large, not code)
+dealinsight_photos/
+dealinsight_photos_PHOCAS_BACKUP/
+
+# Shared Google docs (live in Drive, not here)
+DealInsight_Concept_John_Holliday.docx
+DealInsight_Signals_Validation.docx
+
+# Misc
+*.bak
+*.tmp
+preview.webp
+setup_git.sh
